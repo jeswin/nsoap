@@ -54,7 +54,7 @@ Invoke a function defined on an object.
 curl http://www.nsoap.org/math.square(20)
 ```
 
-# Headers and cookies
+# Headers and Cookies
 
 By default, key-value pairs defined via headers and cookies are treated as variables.
 
@@ -66,8 +66,6 @@ curl --header "x:20" http://www.nsoap.org/math.square(x)
 However, applications can choose to not support this.
 
 # Casing and Special Characters
-
-
 
 This is again application defined.
 
