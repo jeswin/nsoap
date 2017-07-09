@@ -27,9 +27,29 @@ Pass objects with a parameters
 curl http://www.example.com/addTodo(x)?x=({title:"bring milk",assignee:"me"})
 ```
 
+# Parameter Type Inference
+
+NSOAP supports parameter type inference for strings, numbers and booleans.
+In the following example, name is inferred as a string, age as a number and autoRenew as a boolean.
+
+```bash
+curl http://www.nsoap.org/register(name, age, autoRenew)?name="Jeswin"&age=20&autoRenew=true
+```
+
+A string does not need quoting if the value is not a valid boolean or a number.
+```bash
+curl http://www.nsoap.org/register(name, age, autoRenew)?name=Jeswin&age=20&autoRenew=true
+```
+
+However, inside objects, strings need to be quoted.
+```bash
+# Strings need to be quoted
+curl http://www.example.com/addTodo(x)?x=({title:"bring milk",assignee:"me"})
+```
+
 # HTTP GET, POST, PUT whatever.
 
-Any HTTP method (GET, POST, PUT) can be used to make an RPC.But applications are allowed to restrict certain HTTP
+Any HTTP method (GET, POST, PUT) can be used to make an RPC. But applications are allowed to restrict certain HTTP
 methods for security reasons. As a general principle, allow GET while fetching data. And prefer POST while changing
 data.
 
@@ -52,6 +72,8 @@ Invoke a function defined on an object.
 ```bash
 # returns 400
 curl http://www.nsoap.org/math.square(20)
+# OR
+curl http://www.nsoap.org/math.square(x)?x=20
 ```
 
 # Headers and Cookies
