@@ -1,10 +1,10 @@
 # NSOAP: Native Syntax Object Access Protocol
 
-NSOAP is a Remote Procedure Call (RPC) and url convention that attempts to simplify the way web services are organized. NSOAP's url convention can also be used for client-side routing in React, Angular etc.
+NSOAP is a Remote Procedure Call (RPC) and URL convention that uses familiar JavaScript syntax for method invocation and parameter passing. In addition to web services, NSOAP conventions can also be used for client-side routing in React, Angular etc.
 
-Attempting to describe it without code is futile. Let's go straight to the examples.
+Attempting to explain it without code is futile. Let's go straight to the examples.
 
-# Functions
+# Invoking Functions
 
 Invoke a function that adds two numbers
 ```bash
@@ -47,7 +47,7 @@ However, inside objects, strings need to be quoted.
 curl http://www.example.com/addTodo(x)?x=({title:"bring milk",assignee:"me"})
 ```
 
-# HTTP GET, POST, PUT whatever.
+# Use HTTP GET, POST, PUT whatever.
 
 Any HTTP method (GET, POST, PUT) can be used to make an RPC. But applications are allowed to restrict certain HTTP
 methods for security reasons. As a general principle, allow GET while fetching data. And prefer POST while changing
@@ -58,7 +58,7 @@ data.
 curl --data "x=10&y=20" http://www.example.com/addTwoNumbers(x, y)
 ```
 
-# Values
+# Getting Values
 
 Get a value.
 ```bash
@@ -66,7 +66,7 @@ Get a value.
 curl http://www.example.com/greeting
 ```
 
-# Namespaces
+# Organizing code with Namespaces
 
 Invoke a function defined on an object.
 ```bash
