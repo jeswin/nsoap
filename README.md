@@ -1,20 +1,20 @@
 # NSOAP: Native Syntax Object Access Protocol
 
-NSOAP is an intuitive Remove Procedure Call (RPC) convention that can be used in place of patterns such as REST or SOAP. It allows programmers to call remote methods and objects with the same syntax they use for the rest of their code.
+NSOAP is a Remote Procedure Call (RPC) and url convention that attempts to simplify the way web services are organized. NSOAP's url convention can also be used for client-side routing in React, Angular etc.
 
-Let's go straight to some examples.
+Attempting to describe it without code is futile. Let's go straight to the examples.
 
 # Functions
 
 Invoke a function that adds two numbers
 ```bash
 # returns 30
-curl http://www.nsoap.org/addTwoNumbers(10,20)
+curl http://www.example.com/addTwoNumbers(10,20)
 ```
 
 Use parameters
 ```bash
-curl http://www.nsoap.org/addTwoNumbers(x, y)?x=10&y=20
+curl http://www.example.com/addTwoNumbers(x, y)?x=10&y=20
 ```
 
 Pass full objects
@@ -33,12 +33,12 @@ NSOAP supports parameter type inference for strings, numbers and booleans.
 In the following example, name is inferred as a string, age as a number and autoRenew as a boolean.
 
 ```bash
-curl http://www.nsoap.org/register(name, age, autoRenew)?name="Jeswin"&age=20&autoRenew=true
+curl http://www.example.com/register(name, age, autoRenew)?name="Jeswin"&age=20&autoRenew=true
 ```
 
 A string does not need quoting if the value is not a valid boolean or a number.
 ```bash
-curl http://www.nsoap.org/register(name, age, autoRenew)?name=Jeswin&age=20&autoRenew=true
+curl http://www.example.com/register(name, age, autoRenew)?name=Jeswin&age=20&autoRenew=true
 ```
 
 However, inside objects, strings need to be quoted.
@@ -55,7 +55,7 @@ data.
 
 ```bash
 # Using POST
-curl --data "x=10&y=20" http://www.nsoap.org/addTwoNumbers(x, y)
+curl --data "x=10&y=20" http://www.example.com/addTwoNumbers(x, y)
 ```
 
 # Values
@@ -63,7 +63,7 @@ curl --data "x=10&y=20" http://www.nsoap.org/addTwoNumbers(x, y)
 Get a value.
 ```bash
 # returns "Good day"
-curl http://www.nsoap.org/greeting
+curl http://www.example.com/greeting
 ```
 
 # Namespaces
@@ -71,9 +71,9 @@ curl http://www.nsoap.org/greeting
 Invoke a function defined on an object.
 ```bash
 # returns 400
-curl http://www.nsoap.org/math.square(20)
+curl http://www.example.com/math.square(20)
 # OR
-curl http://www.nsoap.org/math.square(x)?x=20
+curl http://www.example.com/math.square(x)?x=20
 ```
 
 # Headers and Cookies
@@ -81,7 +81,7 @@ curl http://www.nsoap.org/math.square(x)?x=20
 By default, key-value pairs defined via headers and cookies are treated as variables.
 ```bash
 # returns 400
-curl --header "x:20" http://www.nsoap.org/math.square(x)
+curl --header "x:20" http://www.example.com/math.square(x)
 ```
 
 However, applications are allowed to turn off this behavior.
@@ -91,7 +91,7 @@ However, applications are allowed to turn off this behavior.
 NSOAP is case-sensitive. So the following is an error
 ```bash
 # Error. 'x' is not the same as 'X'
-curl http://www.nsoap.org/squareRoot(x)?X=100
+curl http://www.example.com/squareRoot(x)?X=100
 ```
 
 # Hyphens, whitespace etc.
@@ -102,5 +102,5 @@ HTTP headers and cookie keys allow characters which are invalid for variable nam
 For instance, the express-nsoap node module with default options will convert it into camelCase while routing.
 ```
 # This works, because node-nsoap converts first-name to firstName
-curl --header "first-name:Jeswin" http://www.nsoap.org/echo(firstName)
+curl --header "first-name:Jeswin" http://www.example.com/echo(firstName)
 ```
