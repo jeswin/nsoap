@@ -1,6 +1,6 @@
 # NSOAP: Native Syntax Object Access Protocol
 
-NSOAP is a Remote Procedure Call (RPC) and URL convention that uses familiar JavaScript syntax for method invocation and parameter passing. In addition to web services, NSOAP conventions can also be used for client-side routing in React, Angular etc. The NSOAP project provides routers for Express, Koa and React. We encourage other platforms to contribute.  
+NSOAP is a Remote Procedure Call (RPC) and URL convention that uses familiar JavaScript syntax for method invocation and parameter passing. In addition to web services, NSOAP conventions can also be used for client-side routing in React, Angular etc. The NSOAP project provides routers for Express, Koa and React. Contributions invited for other platforms.  
 
 Attempting to explain it without code is futile. Let's go straight to the examples.
 
@@ -25,6 +25,36 @@ curl http://www.example.com/addTodo({title:"bring milk",assignee:"me"})
 Pass objects as parameters
 ```bash
 curl http://www.example.com/addTodo(x)?x=({title:"bring milk",assignee:"me"})
+```
+
+
+# Organizing code with Namespaces
+
+Invoke a function defined on an object.
+This allows organizing the code into namespaces similar to directories.
+
+```bash
+curl http://www.example.com/math.square(20)
+# OR
+curl http://www.example.com/math.square(x)?x=20
+# returns 400
+```
+
+# Parenthesis
+
+If the parenthesis are omitted, the function is called without arguments.
+```bash
+curl http://www.example.com/default
+# is the same as
+curl http://www.example.com/default()
+```
+
+# Function Chaining
+
+Chained function calls work the same way you expect it to work.
+The following url invokes the getAccounts function on the result of the customer function.
+```bash
+curl http://www.example.com/customer(100).getAccounts(2017)
 ```
 
 # Parameter Type Inference
@@ -62,24 +92,6 @@ data.
 ```bash
 # Using POST
 curl --data "x=10&y=20" http://www.example.com/addTwoNumbers(x, y)
-```
-
-# Getting Values
-
-Get a value.
-```bash
-# returns "Good day"
-curl http://www.example.com/greeting
-```
-
-# Organizing code with Namespaces
-
-Invoke a function defined on an object.
-```bash
-# returns 400
-curl http://www.example.com/math.square(20)
-# OR
-curl http://www.example.com/math.square(x)?x=20
 ```
 
 # HTTP Headers and Cookies

@@ -1,16 +1,41 @@
-function isFunction(url) {
-  return true;
+function parseArg(a) {
+  return a === "true" || a === "false"
+    ? { type: "boolean", value: a === "true" }
+    : isNaN(a) ? { type: "string", value: a } : { type: "number", value: +a };
 }
 
-function getFunction(url, dicts) {
-
+function analyzeUrl(url) {
+  const queryPos = url.indexOf("?");
+  const path = url.substring(0, queryPos);
+  const parts = path.split(".");
+  return parts.map(
+    part =>
+      part.indexOf("(")
+        ? (() => {
+            const openingBracket = part.indexOf("(");
+            const closingBracket = part.indexOf(")");
+            const identifier = part.substring(0, openingBracket);
+            const argsString = part.substring(
+              openingBracket,
+              closingBracket - openingBracket
+            );
+            const args = argsString.split(",").map(a => a.trim()).map(parseArg);
+            return { type: "function", args };
+          })()
+        : { type: "object", identifier: part }
+  );
 }
 
-function getValue(url) {
-  
-}
+export default function route(app, url, dicts = [], options = {}) {
+  const prefix = options.prefix || "/";
 
-export default function route(app, url, dicts) {
+  const strExpression = url.substring(url.lastIndexOf("/") + 1);
+  const expression = strExpression || (options.index || "index");
+
+  const ast = babylon.parseExpression(expression);
+
+  const result = match(ast);
+
   return isFunction(url)
     ? (() => {
         const { namespace, fnName, args } = getFunction(url, dicts);

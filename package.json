@@ -9,18 +9,18 @@
   },
   "license": "MIT",
   "dependencies": {
-    "babel-polyfill": "*"
+    "babel-polyfill": "*",
   },
   "devDependencies": {
-    "source-map-support": "*",
+    "babel-loader": "*",
+    "babel-plugin-transform-async-to-generator": "*",
+    "babel-plugin-transform-class-properties": "*",
+    "babel-plugin-transform-flow-strip-types": "*",
     "babel-preset-es2015-without-regenerator": "*",
     "babel-preset-stage-2": "*",
-    "babel-plugin-transform-class-properties": "*",
-    "babel-plugin-transform-async-to-generator": "*",
-    "babel-plugin-transform-flow-strip-types": "*",
-    "source-map-loader": "*",
-    "babel-loader": "*",
     "mocha": "*",
-    "should": "*"
+    "should": "*",
+    "source-map-loader": "*",
+    "source-map-support": "*"
   }
 }
