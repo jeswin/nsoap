@@ -1,6 +1,6 @@
 # NSOAP: Native Syntax Object Access Protocol
 
-NSOAP is a Remote Procedure Call (RPC) and URL convention that uses familiar JavaScript syntax for method invocation and parameter passing. In addition to web services, NSOAP conventions can also be used for client-side routing in React, Angular etc.
+NSOAP is a Remote Procedure Call (RPC) and URL convention that uses familiar JavaScript syntax for method invocation and parameter passing. In addition to web services, NSOAP conventions can also be used for client-side routing in React, Angular etc. The NSOAP project provides routers for Express, Koa and React. We encourage other platforms to contribute.  
 
 Attempting to explain it without code is futile. Let's go straight to the examples.
 
@@ -8,8 +8,8 @@ Attempting to explain it without code is futile. Let's go straight to the exampl
 
 Invoke a function that adds two numbers
 ```bash
-# returns 30
 curl http://www.example.com/addTwoNumbers(10,20)
+# returns 30
 ```
 
 Use parameters
@@ -22,7 +22,7 @@ Pass full objects
 curl http://www.example.com/addTodo({title:"bring milk",assignee:"me"})
 ```
 
-Pass objects with a parameters
+Pass objects as parameters
 ```bash
 curl http://www.example.com/addTodo(x)?x=({title:"bring milk",assignee:"me"})
 ```
@@ -41,7 +41,13 @@ A string does not need quoting if the value is not a valid boolean or a number.
 curl http://www.example.com/register(name, age, autoRenew)?name=Jeswin&age=20&autoRenew=true
 ```
 
-However, inside objects, strings need to be quoted.
+Passing a number or boolean as a string will require quoting.
+```bash
+# A person named Mr. True
+curl http://www.example.com/register(firstName)?firstName="true"
+```
+
+Strings inside objects will always need to be quoted.
 ```bash
 # Strings need to be quoted
 curl http://www.example.com/addTodo(x)?x=({title:"bring milk",assignee:"me"})
@@ -100,7 +106,8 @@ HTTP headers and cookie keys allow characters which are invalid for variable nam
 "session-id" is not a valid variable name in most languages. In such cases, the application can choose to ignore them or convert it into a predefined convention such as PascalCase or camelCase.
 
 For instance, the express-nsoap node module with default options will convert it into camelCase while routing.
-```
+
+```bash
 # This works, because node-nsoap converts first-name to firstName
 curl --header "first-name:Jeswin" http://www.example.com/echo(firstName)
 ```
