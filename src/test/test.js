@@ -1,7 +1,3 @@
 describe("NSOAP", () => {
-  before(() => {
-    
-  })
-
   it()
 })

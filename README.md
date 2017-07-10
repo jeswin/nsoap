@@ -53,7 +53,7 @@ Strings inside objects will always need to be quoted.
 curl http://www.example.com/addTodo(x)?x=({title:"bring milk",assignee:"me"})
 ```
 
-# Use HTTP GET, POST, PUT whatever.
+# Use GET, POST, PUT whatever.
 
 Any HTTP method (GET, POST, PUT) can be used to make an RPC. But applications are allowed to restrict certain HTTP
 methods for security reasons. As a general principle, allow GET while fetching data. And prefer POST while changing
@@ -82,15 +82,17 @@ curl http://www.example.com/math.square(20)
 curl http://www.example.com/math.square(x)?x=20
 ```
 
-# Headers and Cookies
+# HTTP Headers and Cookies
 
 By default, key-value pairs defined via headers and cookies are treated as variables.
+However, applications are allowed to turn off this behavior.
 ```bash
 # returns 400
 curl --header "x:20" http://www.example.com/math.square(x)
 ```
 
-However, applications are allowed to turn off this behavior.
+Cookies are disabled by default in NSOAP routers for security reasons.
+This policy needs more discussion.
 
 # Case-sensitivity
 
