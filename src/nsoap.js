@@ -1,10 +1,22 @@
-function parseArg(a) {
+function parseArg(a, dicts) {
   return a === "true" || a === "false"
-    ? { type: "boolean", value: a === "true" }
-    : isNaN(a) ? { type: "string", value: a } : { type: "number", value: +a };
+    ? a === "true"
+    : isNaN(a)
+      ? (() => {
+          //this is a string which can be a key or a literal.
+          //See if any of the dicts define this key. Else treat is as a literal.
+          for (const i = 0; i < dicts.length; i++) {
+            const dict = dicts[i];
+            if (dict.hasOwnProperty(a)) {
+              return dict[a];
+            }
+          }
+          return a;
+        })()
+      : +a;
 }
 
-function analyzeUrl(url) {
+function analyzeUrl(url, dicts) {
   const queryPos = url.indexOf("?");
   const path = url.substring(0, queryPos);
   const parts = path.split(".");
@@ -20,51 +32,49 @@ function analyzeUrl(url) {
               closingBracket - openingBracket
             );
             const args = argsString.split(",").map(a => a.trim()).map(parseArg);
-            return { type: "function", args };
+            return { type: "function", identifier, args };
           })()
         : { type: "object", identifier: part }
   );
 }
 
-export default function route(app, url, dicts = [], options = {}) {
+export default function route(app, url, then, dicts = [], options = {}) {
   const prefix = options.prefix || "/";
 
-  const strExpression = url.substring(url.lastIndexOf("/") + 1);
-  const expression = strExpression || (options.index || "index");
+  const urlExpressionRaw = url.substring(url.lastIndexOf("/") + 1);
+  const expression = urlExpressionRaw || (options.index || "index");
 
-  const ast = babylon.parseExpression(expression);
+  const parts = analyzeUrl(expression, dicts);
 
-  const result = match(ast);
+  let obj,
+    error,
+    result = app;
 
-  return isFunction(url)
-    ? (() => {
-        const { namespace, fnName, args } = getFunction(url, dicts);
-        const parentObj = namespace.reduce(
-          (acc, key) => (acc ? acc[key] : undefined),
-          app
-        );
-        return parentObj
-          ? (() => {
-              const fn = parentObj[fnName];
-              return fn
-                ? { result: fn.apply(parentObj, args) }
-                : {
-                    error: `${namespace.join(".") ||
-                      "app"}.${fnName}' is not a function`
-                  };
-            })()
-          : { error: `${namespace.join(".")} is not a valid namespace.` };
-      })()
-    : isValue(url)
-      ? (() => {
-          const { namespace, property } = getProperty(url);
-          const parentObj = namespace.reduce(
-            (acc, key) => (acc ? acc[key] : undefined),
-            app
-          );
-          return parentObj
-            ? { result: parentObj[property] }
-            : { error: `${namespace.join(".")} is not a valid namespace.` };
-        })()
-      : { error: `${url} is not a valid object reference.` };
+  for (const i = 0; i < parts.length; i++) {
+    const part = parts[i];
+    obj = obj ? `${obj}.${part.identifier}` : `${part.identifier}`;
+    if (typeof result !== "undefined") {
+      if (!error) {
+        if (part.type === "function") {
+          const fn = acc[part.identifier];
+          if (typeof fn === "function") {
+            result = fn.apply(result, args);
+          } else {
+            error = `${obj}.${part.identifier} is not a function. Was ${typeof fn}.`;
+          }
+        } else {
+          const ref = result[part.identifier];
+          result = typeof ref === "function" ? ref.call(result) : ref;
+        }
+      }
+    } else {
+      error = `${obj} is undefined.`;
+    }
+  }
+
+  if (error) {
+    then(undefined, error);
+  } else {
+    then(result);
+  }
 }

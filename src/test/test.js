@@ -1,3 +1,3 @@
 describe("NSOAP", () => {
-  it()
-})
+  it();
+});
