@@ -2,7 +2,24 @@
 
 NSOAP is a Remote Procedure Call (RPC) and URL convention that uses familiar JavaScript syntax for method invocation and parameter passing. In addition to web services, NSOAP conventions can also be used for client-side routing in React, Angular etc. The NSOAP project provides routers for Express, Koa and React. Contributions invited for other platforms.  
 
-Attempting to explain it without code is futile. Let's go straight to the examples.
+Attempting to explain it without code is futile. Let's go straight to the examples. Examples are available for server-side routing with NSOAP-Express, NSOAP-Koa and client-side routing with NSOAP-React.
+
+# Initializing your app
+```javascript
+// This example assumes Express JS
+const express = require("express");
+const nsoap = require("nsoap-express");
+
+const app = express();
+
+const myApp = {
+  addTwoNumbers(x, y) {
+    return x + y;
+  }
+}
+
+app.use(nsoap(myApp));
+```
 
 # Invoking Functions
 
@@ -17,12 +34,12 @@ Use parameters.
 curl "http://www.example.com/addTwoNumbers(x,y)?x=10&y=20"
 ```
 
-Arguments can be strings. Quote and URI encode them if they contain spaces or are invalid JavaScript variable names.
+Arguments can be strings. Quote and URI encode them if they contain spaces or if they are invalid JavaScript identifiers.
 ```bash
 # thomas is treated as a literal "thomas"
 curl "http://www.example.com/login(thomas)"
 
-# Have spaces? Must quote.
+# Have spaces? Must quote and encode.
 # %22 is double quote, %20 is space
 curl "http://www.example.com/login(%22thomas%20jacob%22)"
 ```
@@ -100,8 +117,8 @@ However, applications are allowed to turn off this behavior.
 curl --header "x:20" "http://www.example.com/math.square(x)"
 ```
 
-Cookies are disabled by default in NSOAP routers for security reasons.
-This policy needs more discussion.
+Cookies are disabled by default in NSOAP routers until we figure out security implications.
+This will change in future.
 
 # Hyphens, whitespace etc.
 
