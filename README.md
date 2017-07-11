@@ -5,6 +5,7 @@ NSOAP is a Remote Procedure Call (RPC) and URL convention that uses familiar Jav
 Attempting to explain it without code is futile. Let's go straight to the examples. Examples are available for server-side routing with NSOAP-Express, NSOAP-Koa and client-side routing with NSOAP-React.
 
 # Initializing your app
+
 ```javascript
 // This example assumes Express JS
 const express = require("express");
@@ -24,17 +25,20 @@ app.use(nsoap(myApp));
 # Invoking Functions
 
 Invoke a function that adds two numbers
+
 ```bash
 curl "http://www.example.com/addTwoNumbers(10,20)"
 # returns 30
 ```
 
 Use parameters.
+
 ```bash
 curl "http://www.example.com/addTwoNumbers(x,y)?x=10&y=20"
 ```
 
 Arguments can be strings. Quote and URI encode them if they contain spaces or if they are invalid JavaScript identifiers.
+
 ```bash
 # thomas is treated as a literal "thomas"
 curl "http://www.example.com/login(thomas)"
@@ -44,7 +48,8 @@ curl "http://www.example.com/login(thomas)"
 curl "http://www.example.com/login(%22thomas%20jacob%22)"
 ```
 
-Pass full objects in the URI, but they need to be encoded
+You may pass full objects in the URI, but they will need to be encoded. The recommended way to pass complex objects to a remote service is via the request body.
+
 ```bash
 # x = { "title": "bring milk", "assignee": "me" })
 # encodeURIComponent(x)
@@ -85,10 +90,10 @@ curl "http://www.example.com/customer(100).getAccounts(2017)"
 # Parameter Type Inference
 
 NSOAP supports parameter type inference for strings, numbers and booleans.
-In the following example, the function parameters are identified as string, number and boolean.
+In the following example, the function parameters are identified as string, number, boolean and number.
 
 ```bash
-curl "http://www.example.com/search(Jeswin,20,true)"
+curl "http://www.example.com/search(Jeswin,20,true,x)?x=100"
 ```
 
 # Case-sensitivity
@@ -101,7 +106,7 @@ curl "http://www.example.com/squareRoot(x)?X=100"
 
 # On the server, use GET, POST, PUT whatever.
 
-Arguments passed via the query string need to be URI encoded as seen in examples above. Arguments passed via HTTP method body are parsed with JSON.parse; so they need to be valid. For examples, check the documentation of NSOAP-Express or NSOAP-Koa.
+Arguments passed via the query string need to be URI encoded as seen in examples above. Arguments passed via HTTP method body are parsed with JSON.parse; so they need to be valid. For examples, see the documentation for NSOAP-Express or NSOAP-Koa.
 
 ```bash
 # Using POST with url encoding.
@@ -112,6 +117,7 @@ curl --data "x=10&y=20" "http://www.example.com/addTwoNumbers(x,y)"
 
 By default, key-value pairs defined via headers and cookies are treated as variables.
 However, applications are allowed to turn off this behavior.
+
 ```bash
 # returns 400
 curl --header "x:20" "http://www.example.com/math.square(x)"
