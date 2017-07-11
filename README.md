@@ -48,7 +48,7 @@ curl "http://www.example.com/login(thomas)"
 curl "http://www.example.com/login(%22thomas%20jacob%22)"
 ```
 
-You may pass full objects in the URI, but they will need to be encoded. The recommended way to pass complex objects to a remote service is via the request body.
+You may pass full objects in the URI, but they will need to be encoded. The recommended way to pass complex objects to a remote service is via the request body rather than the URI.
 
 ```bash
 # x = { "title": "bring milk", "assignee": "me" })
