@@ -9,7 +9,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "babel-polyfill": "*",
+    "babel-polyfill": "*"
   },
   "devDependencies": {
     "babel-loader": "*",

@@ -1,3 +1,6 @@
+import babylon from "babylon";
+import chimpanzee from "chimpanzee";
+ 
 function parseArg(a, dicts) {
   return a === "true" || a === "false"
     ? a === "true"
@@ -16,10 +19,9 @@ function parseArg(a, dicts) {
       : +a;
 }
 
-function analyzeUrl(url, dicts) {
-  const queryPos = url.indexOf("?");
-  const path = url.substring(0, queryPos);
-  const parts = path.split(".");
+function analyzePath(rawPath, dicts) {
+  const path = decodeURI(rawPath);
+  const parts = path.indexOf(".") ?  path.split(".");
   return parts.map(
     part =>
       part.indexOf("(")
@@ -38,25 +40,25 @@ function analyzeUrl(url, dicts) {
   );
 }
 
-export default function route(app, url, then, dicts = [], options = {}) {
+export default function route(app, path, then, dicts = [], options = {}) {
   const prefix = options.prefix || "/";
 
-  const urlExpressionRaw = url.substring(url.lastIndexOf("/") + 1);
-  const expression = urlExpressionRaw || (options.index || "index");
+  const expression = path || (options.index || "index");
 
-  const parts = analyzeUrl(expression, dicts);
+  const parts = analyzePath(expression, dicts);
 
   let obj,
     error,
     result = app;
 
+  console.log("PARTS", parts);
   for (const i = 0; i < parts.length; i++) {
     const part = parts[i];
     obj = obj ? `${obj}.${part.identifier}` : `${part.identifier}`;
     if (typeof result !== "undefined") {
       if (!error) {
         if (part.type === "function") {
-          const fn = acc[part.identifier];
+          const fn = result[part.identifier];
           if (typeof fn === "function") {
             result = fn.apply(result, args);
           } else {
@@ -71,6 +73,8 @@ export default function route(app, url, then, dicts = [], options = {}) {
       error = `${obj} is undefined.`;
     }
   }
+
+  console.log("RE::", result, error);
 
   if (error) {
     then(undefined, error);

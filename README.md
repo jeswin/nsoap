@@ -12,17 +12,26 @@ curl "http://www.example.com/addTwoNumbers(10,20)"
 # returns 30
 ```
 
-Use parameters
+Use parameters.
 ```bash
-curl "http://www.example.com/addTwoNumbers(x, y)?x=10&y=20"
+curl "http://www.example.com/addTwoNumbers(x,y)?x=10&y=20"
 ```
 
-Pass full objects, but they need to be encoded
+Arguments can be strings. Quote and URI encode them if they contain spaces or are invalid JavaScript variable names.
+```bash
+# thomas is treated as a literal "thomas"
+curl "http://www.example.com/login(thomas)"
+
+# Have spaces? Must quote.
+# %22 is double quote, %20 is space
+curl "http://www.example.com/login(%22thomas%20jacob%22)"
+```
+
+Pass full objects in the URI, but they need to be encoded
 ```bash
 # x = { "title": "bring milk", "assignee": "me" })
-# encodeURIComponent(x) =
-"%7B%20%22title%22%3A%20%22bring%20milk%22%2C%20%22assignee%22%3A%20%22me%22%20%7D"
-curl "http://www.example.com/addTodo(x)?x=
+# encodeURIComponent(x)
+curl "http://www.example.com/findTodo(x)?x=
 %7B%20%22title%22%3A%20%22bring%20milk%22%2C%20%22assignee%22%3A%20%22me%22%20%7D"
 ```
 
@@ -59,36 +68,27 @@ curl "http://www.example.com/customer(100).getAccounts(2017)"
 # Parameter Type Inference
 
 NSOAP supports parameter type inference for strings, numbers and booleans.
-In the following example, name is inferred as a string, age as a number and autoRenew as a boolean.
+In the following example, the function parameters are identified as string, number and boolean.
 
 ```bash
-curl "http://www.example.com/register(name,age,autoRenew)?name="Jeswin"&age=20&autoRenew=true"
+curl "http://www.example.com/search(Jeswin,20,true)"
 ```
 
-A string does not need quoting if the value is not a valid boolean or a number.
+# Case-sensitivity
+
+NSOAP is case-sensitive. So the following will not assign 100 to the parameter 'x'.
 ```bash
-curl "http://www.example.com/register(name,age,autoRenew)?name=Jeswin&age=20&autoRenew=true"
+# Error. 'x' is not the same as 'X'
+curl "http://www.example.com/squareRoot(x)?X=100"
 ```
 
-Passing a number or boolean as a string will require encoding quotes around it.
-```bash
-# A person named Mr. True
-curl "http://www.example.com/register(firstName)?firstName=%22true%22"
-```
+# On the server, use GET, POST, PUT whatever.
 
-Strings inside objects will always need to be quoted.
-```bash
-# Strings need to be quoted
-curl "http://www.example.com/addTodo(x)?x=({title:"bring milk",assignee:"me"})"
-```
-
-# Use GET, POST, PUT whatever.
-
-Any HTTP method (GET, POST, PUT) can be used to make an RPC. But applications are allowed to restrict certain HTTP methods for security reasons. As a general principle, allow GET while fetching data. And allow POST while changing data.
+Arguments passed via the query string need to be URI encoded as seen in examples above. Arguments passed via HTTP method body are parsed with JSON.parse; so they need to be valid. For examples, check the documentation of NSOAP-Express or NSOAP-Koa.
 
 ```bash
-# Using POST
-curl --data "x=10&y=20" "http://www.example.com/addTwoNumbers(x, y)"
+# Using POST with url encoding.
+curl --data "x=10&y=20" "http://www.example.com/addTwoNumbers(x,y)"
 ```
 
 # HTTP Headers and Cookies
@@ -103,21 +103,11 @@ curl --header "x:20" "http://www.example.com/math.square(x)"
 Cookies are disabled by default in NSOAP routers for security reasons.
 This policy needs more discussion.
 
-# Case-sensitivity
-
-NSOAP is case-sensitive. So the following is an error
-```bash
-# Error. 'x' is not the same as 'X'
-curl "http://www.example.com/squareRoot(x)?X=100"
-```
-
 # Hyphens, whitespace etc.
 
-HTTP headers and cookie keys allow characters which are invalid for variable naming in most languages. For instance, "session-id" is not a valid variable name in most languages. In such cases, the application can choose to ignore them or convert it into a predefined convention such as PascalCase or camelCase.
-
-For instance, the express-nsoap node module with default options will convert it into camelCase while routing.
+HTTP headers and cookie keys allow characters which are invalid for variable naming in most languages. For instance, "session-id" is not a valid variable name in most languages. NSOAP routers must offer applications the ability convert them into camelCase, PascalCase, snake_case, lowercase or UPPERCASE.
 
 ```bash
 # This works, because node-nsoap converts first-name to firstName
-curl --header "first-name:Jeswin" "http://www.example.com/echo(firstName)"
+curl --header "first-name:\"Jeswin\"" "http://www.example.com/echo(firstName)"
 ```
