@@ -1,45 +1,55 @@
-import babylon from "babylon";
-import chimpanzee from "chimpanzee";
-
 /*
   If the part is a function, we need to get the actual value of the parameters.
   A parameter x or y in func(x, y) may be
     a) Assigned a value in one of the dicts
     b) OR should be treated as a string literal "x" or "y"
 */
-function parseArg(a, dicts) {
+function getArgumentValue(a, dicts) {
   return a === "true" || a === "false"
     ? a === "true"
     : isNaN(a)
       ? isIdentifier(a)
-        ? (() => {
-          for (const i = 0; i < dicts.length; i++) {
-            const dict = dicts[i];
-            if (dict.hasOwnProperty(a)) {
-              return dict[a];
+        ? () => {
+            for (const i = 0; i < dicts.length; i++) {
+              const dict = dicts[i];
+              if (dict.hasOwnProperty(a)) {
+                return dict[a];
+              }
             }
+            return a;
           }
-          return a;
-        })
         : JSON.parse(a)
       : +a;
 }
 
 /*
-    Pass the path through our grammar, and split it into
+    Split path expression into
       a) objects
-      b) functions and parameters
+      b) functions and their parameters
 */
-function analyzePath(rawPath, dicts) {
+function analyzePath(encodedPath, dicts) {
   //The path would be url encoded
-  const path = decodeURI(rawPath);
-
-  const parts = [];
+  const path = decodeURI(encodedPath);
+  const parts = path.indexOf(".") ? path.split(".") : [path];
+  const openingBracket = path.indexOf("(");
+  const isFunction = openingBracket > -1;
   return parts.map(
     part =>
-      part.type === "function"
-        ? { type: path.type, arguments: getArgumentValues(type.parameters) }
-        : part
+      isFunction
+        ? (() => {
+            const closingBracket = part.indexOf(")");
+            const identifier = part.substring(0, openingBracket);
+            const argsString = part.substring(
+              openingBracket,
+              closingBracket - openingBracket
+            );
+            const args = argsString
+              .split(",")
+              .map(a => a.trim())
+              .map(getArgumentValue);
+            return { type: "function", identifier, args };
+          })()
+        : { type: "object", identifier: part }
   );
 }
 
@@ -51,7 +61,6 @@ export default function route(app, path, then, dicts = [], options = {}) {
     error,
     result = app;
 
-  console.log("PARTS", parts);
   for (const i = 0; i < parts.length; i++) {
     const part = parts[i];
     obj = obj ? `${obj}.${part.identifier}` : `${part.identifier}`;
@@ -73,8 +82,6 @@ export default function route(app, path, then, dicts = [], options = {}) {
       error = `${obj} is undefined.`;
     }
   }
-
-  console.log("RE::", result, error);
 
   if (error) {
     then(undefined, error);
