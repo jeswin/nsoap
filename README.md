@@ -69,6 +69,17 @@ curl "http://www.example.com/findTodo(x)?x=
 %7B%20%22title%22%3A%20%22bring%20milk%22%2C%20%22assignee%22%3A%20%22me%22%20%7D"
 ```
 
+# On the server, use GET, POST, PUT whatever.
+
+Arguments passed via the query string need to be URI encoded as seen in examples above. Arguments passed via HTTP method body are parsed with JSON.parse; so they need to be valid. For examples, see the documentation for NSOAP-Express or NSOAP-Koa.
+
+```bash
+# Using POST with JSON content type
+curl -H "Content-Type: application/json" -X POST -d '{"x":10,"y":20}' "http://www.example.com/addTwoNumbers(x,y)"
+# Using POST with url encoding.
+curl --data "x=10&y=20" "http://www.example.com/addTwoNumbers(x,y)"
+```
+
 # Organizing code with Namespaces
 
 Invoke a function defined on an object. This allows organizing the code into namespaces similar to directories.
@@ -115,15 +126,6 @@ NSOAP is case-sensitive. So the following will not assign 100 to the parameter '
 curl "http://www.example.com/squareRoot(x)?X=100"
 ```
 
-# On the server, use GET, POST, PUT whatever.
-
-Arguments passed via the query string need to be URI encoded as seen in examples above. Arguments passed via HTTP method body are parsed with JSON.parse; so they need to be valid. For examples, see the documentation for NSOAP-Express or NSOAP-Koa.
-
-```bash
-# Using POST with url encoding.
-curl --data "x=10&y=20" "http://www.example.com/addTwoNumbers(x,y)"
-```
-
 # HTTP Headers and Cookies
 
 By default, key-value pairs defined via headers and cookies are treated as variables. However, applications are allowed to turn off this behavior.
@@ -133,13 +135,23 @@ By default, key-value pairs defined via headers and cookies are treated as varia
 curl --header "x:20" "http://www.example.com/math.square(x)"
 ```
 
-Cookies are disabled by default in NSOAP routers until we figure out security implications. This will change in future.
+Cookies are disabled by default in NSOAP routers. They must be explicitly enabled in methods which require them. See Router Documentation (Express, Koa) on how to enable cookies.
 
 # Hyphens, whitespace etc.
 
-HTTP headers and cookie keys allow characters which are invalid for variable naming in most languages. For instance, "session-id" is not a valid variable name in most languages. NSOAP routers must offer applications the ability convert them into camelCase, PascalCase, snake_case, lowercase or UPPERCASE.
+HTTP headers and cookie keys allow characters which are invalid for variable naming in most languages. For instance, "session-id" is not a valid variable name in most languages. NSOAP Routers must offer applications the ability convert them into camelCase, PascalCase, snake_case, lowercase or UPPERCASE.
 
 ```bash
 # This works, because node-nsoap converts first-name to firstName
 curl --header "first-name:\"Jeswin\"" "http://www.example.com/echo(firstName)"
 ```
+
+# Security and Implications of ignoring HTTP methods
+
+You should not be relying on HTTP methods to secure your API. Pass session tokens explicitly to functions which need to be secured.
+
+```bash
+curl --header "session-token:AD332DA12323AAA" "http://www.example.com/placeOrder(itemId, quantity, sessionToken)?itemId=200&quantity=3"
+```
+
+Since cookies are disabled by default, session tokens cannot be sent via an CSRF attack. After due consideration, applications may enable cookies for functions which do not modify data.
