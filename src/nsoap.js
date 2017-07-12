@@ -1,13 +1,18 @@
 import babylon from "babylon";
 import chimpanzee from "chimpanzee";
- 
+
+/*
+  If the part is a function, we need to get the actual value of the parameters.
+  A parameter x or y in func(x, y) may be
+    a) Assigned a value in one of the dicts
+    b) OR should be treated as a string literal "x" or "y"
+*/
 function parseArg(a, dicts) {
   return a === "true" || a === "false"
     ? a === "true"
     : isNaN(a)
-      ? (() => {
-          //this is a string which can be a key or a literal.
-          //See if any of the dicts define this key. Else treat is as a literal.
+      ? isIdentifier(a)
+        ? (() => {
           for (const i = 0; i < dicts.length; i++) {
             const dict = dicts[i];
             if (dict.hasOwnProperty(a)) {
@@ -15,36 +20,31 @@ function parseArg(a, dicts) {
             }
           }
           return a;
-        })()
+        })
+        : JSON.parse(a)
       : +a;
 }
 
+/*
+    Pass the path through our grammar, and split it into
+      a) objects
+      b) functions and parameters
+*/
 function analyzePath(rawPath, dicts) {
+  //The path would be url encoded
   const path = decodeURI(rawPath);
-  const parts = path.indexOf(".") ?  path.split(".");
+
+  const parts = [];
   return parts.map(
     part =>
-      part.indexOf("(")
-        ? (() => {
-            const openingBracket = part.indexOf("(");
-            const closingBracket = part.indexOf(")");
-            const identifier = part.substring(0, openingBracket);
-            const argsString = part.substring(
-              openingBracket,
-              closingBracket - openingBracket
-            );
-            const args = argsString.split(",").map(a => a.trim()).map(parseArg);
-            return { type: "function", identifier, args };
-          })()
-        : { type: "object", identifier: part }
+      part.type === "function"
+        ? { type: path.type, arguments: getArgumentValues(type.parameters) }
+        : part
   );
 }
 
 export default function route(app, path, then, dicts = [], options = {}) {
-  const prefix = options.prefix || "/";
-
   const expression = path || (options.index || "index");
-
   const parts = analyzePath(expression, dicts);
 
   let obj,

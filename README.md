@@ -31,24 +31,36 @@ curl "http://www.example.com/addTwoNumbers(10,20)"
 # returns 30
 ```
 
-Use parameters.
+Arguments can be strings, numbers or booleans. If they are strings, they must still be valid JavaScript identifiers.
 
 ```bash
-curl "http://www.example.com/addTwoNumbers(x,y)?x=10&y=20"
+# numeric argument
+curl "http://www.example.com/addTwoNumbers(10,20)"
+# boolean argument
+curl "http://www.example.com/findAll(true)"
+# string argument
+curl "http://www.example.com/search(thomas)"
 ```
 
-Arguments can be strings. Quote and URI encode them if they contain spaces or if they are invalid JavaScript identifiers.
+Use parameter variables.
 
 ```bash
-# thomas is treated as a literal "thomas"
-curl "http://www.example.com/login(thomas)"
+# numeric
+curl "http://www.example.com/addTwoNumbers(x,y)?x=10&y=20"
+# string
+curl "http://www.example.com/search(x)?x=thomas"
+```
 
+If the argument is a string and it contains spaces or other characters, you will need to quote and encode them. They can only be passed via parameter variables.
+
+```bash
 # Have spaces? Must quote and encode.
 # %22 is double quote, %20 is space
-curl "http://www.example.com/login(%22thomas%20jacob%22)"
+# x = "thomas jacob"
+curl "http://www.example.com/search(x)?x=%22thomas%20jacob%22"
 ```
 
-You may pass full objects in the URI, but they will need to be encoded. The recommended way to pass complex objects to a remote service is via the request body rather than the URI.
+You may pass full JSON objects via parameter variables.
 
 ```bash
 # x = { "title": "bring milk", "assignee": "me" })
@@ -59,8 +71,7 @@ curl "http://www.example.com/findTodo(x)?x=
 
 # Organizing code with Namespaces
 
-Invoke a function defined on an object.
-This allows organizing the code into namespaces similar to directories.
+Invoke a function defined on an object. This allows organizing the code into namespaces similar to directories.
 
 ```bash
 curl "http://www.example.com/math.square(20)"
@@ -81,16 +92,16 @@ curl http://www.example.com/default()
 
 # Function Chaining
 
-Chained function calls work the same way you expect it to work.
-The following url invokes the getAccounts function on the result of the customer function.
+Chained function calls work the same way you expect it to work. The following url invokes the getAccounts function on the result of the customer function.
 ```bash
 curl "http://www.example.com/customer(100).getAccounts(2017)"
+#OR
+curl "http://www.example.com/customer(custId).getAccounts(year)?custId=100&year=2017"
 ```
 
 # Parameter Type Inference
 
-NSOAP supports parameter type inference for strings, numbers and booleans.
-In the following example, the function parameters are identified as string, number, boolean and number.
+NSOAP supports parameter type inference for strings, numbers and booleans. In the following example, the function parameters are identified as string, number, boolean and number.
 
 ```bash
 curl "http://www.example.com/search(Jeswin,20,true,x)?x=100"
@@ -115,16 +126,14 @@ curl --data "x=10&y=20" "http://www.example.com/addTwoNumbers(x,y)"
 
 # HTTP Headers and Cookies
 
-By default, key-value pairs defined via headers and cookies are treated as variables.
-However, applications are allowed to turn off this behavior.
+By default, key-value pairs defined via headers and cookies are treated as variables. However, applications are allowed to turn off this behavior.
 
 ```bash
 # returns 400
 curl --header "x:20" "http://www.example.com/math.square(x)"
 ```
 
-Cookies are disabled by default in NSOAP routers until we figure out security implications.
-This will change in future.
+Cookies are disabled by default in NSOAP routers until we figure out security implications. This will change in future.
 
 # Hyphens, whitespace etc.
 
