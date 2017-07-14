@@ -1,3 +1,5 @@
+const identifierRegex = /^[a-zA-Z_$][a-zA-Z_$0-9]*$/;
+
 /*
   If the part is a function, we need to get the actual value of the parameters.
   A parameter x or y in func(x, y) may be
@@ -6,20 +8,20 @@
 */
 function getArgumentValue(a, dicts) {
   return a === "true" || a === "false"
-    ? a === "true"
+    ? { value: a === "true" }
     : isNaN(a)
-      ? isIdentifier(a)
+      ? identifierRegex.test(a)
         ? () => {
             for (const i = 0; i < dicts.length; i++) {
               const dict = dicts[i];
               if (dict.hasOwnProperty(a)) {
-                return dict[a];
+                return { value: dict[a] };
               }
             }
-            return a;
+            return { value: a };
           }
-        : JSON.parse(a)
-      : +a;
+        : { error: `${a} is not a valid identifier.` }
+      : { value: +a };
 }
 
 /*
