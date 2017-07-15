@@ -103,7 +103,8 @@ curl http://www.example.com/default()
 
 # Function Chaining
 
-Chained function calls work the same way you expect it to work. The following url invokes the getAccounts function on the result of the customer function.
+Chained function calls work the same way you expect it to work. The following url invokes the getAccounts function on the result of the customer function. If the a function returns a Promise (or Future), the Promise is resolved and the subsequent function or object is accessed on the resolved value.
+
 ```bash
 curl "http://www.example.com/customer(100).getAccounts(2017)"
 #OR
@@ -137,16 +138,18 @@ curl --header "x:20" "http://www.example.com/math.square(x)"
 
 Cookies are disabled by default in NSOAP routers. They must be explicitly enabled in methods which require them. See Router Documentation (Express, Koa) on how to enable cookies.
 
-# Hyphens, whitespace etc.
+# Order of searching parameters in the request
 
-HTTP headers and cookie keys allow characters which are invalid for variable naming in most languages. For instance, "session-id" is not a valid variable name in most languages. NSOAP Routers must offer applications the ability convert them into camelCase, PascalCase, snake_case, lowercase or UPPERCASE.
+NSOAP routers will attempt to find parameter values in the following Order
 
-```bash
-# This works, because node-nsoap converts first-name to firstName
-curl --header "first-name:\"Jeswin\"" "http://www.example.com/echo(firstName)"
-```
+- Headers
+- Querystring
+- body
+- Cookies (later)
 
-# Security and Implications of ignoring HTTP methods
+This means that if a parameter say "x" is defined in the Headers and in the Body, the value found in Headers will take precedence.
+
+# Security implications of ignoring HTTP methods
 
 You should not be relying on HTTP methods to secure your API. Pass session tokens explicitly to functions which need to be secured.
 

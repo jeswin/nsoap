@@ -6,22 +6,25 @@ const identifierRegex = /^[a-zA-Z_$][a-zA-Z_$0-9]*$/;
     a) Assigned a value in one of the dicts
     b) OR should be treated as a string literal "x" or "y"
 */
-function getArgumentValue(a, dicts) {
-  return a === "true" || a === "false"
-    ? { value: a === "true" }
-    : isNaN(a)
-      ? identifierRegex.test(a)
-        ? () => {
-            for (const i = 0; i < dicts.length; i++) {
-              const dict = dicts[i];
-              if (dict.hasOwnProperty(a)) {
-                return { value: dict[a] };
+function getArgumentValue(dicts, options) {
+  return a =>
+    a === "true" || a === "false"
+      ? { value: a === "true" }
+      : isNaN(a)
+        ? identifierRegex.test(a)
+          ? (() => {
+              for (const i = 0; i < dicts.length; i++) {
+                const dict = dicts[i];
+                const keys = Object.keys(dict).map();
+
+                if (dict.hasOwnProperty(a)) {
+                  return { value: dict[a] };
+                }
               }
-            }
-            return { value: a };
-          }
-        : { error: `${a} is not a valid identifier.` }
-      : { value: +a };
+              return { value: a };
+            })()
+          : { error: `${a} is not a valid identifier.` }
+        : { value: +a };
 }
 
 /*
@@ -55,7 +58,7 @@ function analyzePath(encodedPath, dicts) {
   );
 }
 
-export default function route(app, path, then, dicts = [], options = {}) {
+export default async function route(app, path, dicts = [], options = {}, then) {
   const expression = path || (options.index || "index");
   const parts = analyzePath(expression, dicts);
 
@@ -71,13 +74,15 @@ export default function route(app, path, then, dicts = [], options = {}) {
         if (part.type === "function") {
           const fn = result[part.identifier];
           if (typeof fn === "function") {
-            result = fn.apply(result, args);
+            result = await Promise.resolve(fn.apply(result, args));
           } else {
             error = `${obj}.${part.identifier} is not a function. Was ${typeof fn}.`;
           }
         } else {
           const ref = result[part.identifier];
-          result = typeof ref === "function" ? ref.call(result) : ref;
+          result = await Promise.resolve(
+            typeof ref === "function" ? ref.call(result) : ref
+          );
         }
       }
     } else {
@@ -85,9 +90,7 @@ export default function route(app, path, then, dicts = [], options = {}) {
     }
   }
 
-  if (error) {
-    then(undefined, error);
-  } else {
-    then(result);
-  }
+  return await Promise.resolve(
+    then ? (error ? then(undefined, error) : then(result)) : result
+  );
 }

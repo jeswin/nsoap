@@ -19,9 +19,9 @@ function getMockHandler() {
 }
 
 describe("NSOAP", () => {
-  it("should route to a value", () => {
+  it("should route to a value", async () => {
     const handler = getMockHandler();
-    nsoap(app, "about", handler.then);
+    await nsoap(app, "about", [], {}, handler.then);
     handler.getResult().should.equal("NSOAP Test Suite");
   });
 });
