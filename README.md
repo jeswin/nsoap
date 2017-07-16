@@ -4,7 +4,9 @@ NSOAP is a Remote Procedure Call (RPC) and URL convention that uses familiar Jav
 
 Attempting to explain it without code is futile. Let's go straight to the examples. Examples are available for server-side routing with NSOAP-Express, NSOAP-Koa and client-side routing with NSOAP-React.
 
-# Initializing your app
+# Initializing your App: The App Object
+
+The App Object contains all the "routes" the application will respond to.
 
 ```javascript
 // This example assumes Express JS
@@ -28,7 +30,6 @@ Invoke a function that adds two numbers
 
 ```bash
 curl "http://www.example.com/addTwoNumbers(10,20)"
-# returns 30
 ```
 
 Arguments can be strings, numbers or booleans. If they are strings, they must still be valid JavaScript identifiers.
@@ -69,6 +70,32 @@ curl "http://www.example.com/findTodo(x)?x=
 %7B%20%22title%22%3A%20%22bring%20milk%22%2C%20%22assignee%22%3A%20%22me%22%20%7D"
 ```
 
+# Returning a response
+
+Applications are expected to return the response to be sent to the client.
+
+```javascript
+const myApp = {
+  addTwoNumbers(x, y, { request, response }) {
+    return x + y;
+  },
+}
+```
+
+In case there is an error, throw an exception.
+
+```javascript
+const myApp = {
+  addTwoNumbers(x, y, { request, response }) {
+    if (typeof  x === "undefined" || typeof y === "undefined") {
+      throw new Error("Invalid value.")
+    } else {
+      return x + y;
+    }
+  },
+}
+```
+
 # On the server, use GET, POST, PUT whatever.
 
 Arguments passed via the query string need to be URI encoded as seen in examples above. Arguments passed via HTTP method body are parsed with JSON.parse; so they need to be valid. For examples, see the documentation for NSOAP-Express or NSOAP-Koa.
@@ -93,7 +120,7 @@ curl "http://www.example.com/math.square(x)?x=20"
 
 # Parenthesis
 
-Parenthesis may be omitted if the function can be called without arguments.
+Parenthesis may be omitted if the function can be called without arguments. If the url refers to an object instead of a function, its value is simply returned.
 
 ```bash
 curl "http://www.example.com/default"
@@ -101,9 +128,22 @@ curl "http://www.example.com/default"
 curl http://www.example.com/default()
 ```
 
+# Default function
+
+Routers will provide Applications an option to specify the default function to be called when the url omits the function name. Routers should use "index" if no default function is specified.
+
+If the url points to the root (in other words, if the path = "/"), the default function is invoked on the App object.
+
+```bash
+# Assuming that the default function name has not been changed
+curl "http://www.example.com/"
+# is the same as
+curl http://www.example.com/index()
+```
+
 # Function Chaining
 
-Chained function calls work the same way you expect it to work. The following url invokes the getAccounts function on the result of the customer function. If the a function returns a Promise (or Future), the Promise is resolved and the subsequent function or object is accessed on the resolved value.
+Chained function calls work the same way you expect it to work. The following url invokes the getAccounts function on the result of the customer function. If the function returns a Promise (or a Future), the Promise is resolved and the subsequent function or object is accessed on the resolved value.
 
 ```bash
 curl "http://www.example.com/customer(100).getAccounts(2017)"
@@ -113,7 +153,7 @@ curl "http://www.example.com/customer(custId).getAccounts(year)?custId=100&year=
 
 # Parameter Type Inference
 
-NSOAP supports parameter type inference for strings, numbers and booleans. In the following example, the function parameters are identified as string, number, boolean and number.
+NSOAP supports parameter type inference for strings, numbers and booleans. In the following example, the function parameters are inferred as string, number, boolean and number.
 
 ```bash
 curl "http://www.example.com/search(Jeswin,20,true,x)?x=100"
@@ -127,6 +167,49 @@ NSOAP is case-sensitive. So the following will not assign 100 to the parameter '
 curl "http://www.example.com/squareRoot(x)?X=100"
 ```
 
+# Advanced Default functions
+
+If the return value is an object and the name of one of its properties is the same as the default function name, it is invoked.
+
+That may be confusing, see the example below. addTwoNumbers() returns an object with a property named "index" which contains a function. Assuming "index" is configured to be the default function name, that function will be automatically invoked.
+
+```javascript
+// The app
+const myApp = {
+  addTwoNumbers(x, y) {
+    return {
+      index() {
+        return x + y;
+      }
+    }
+  },
+}
+```
+
+```bash
+curl "http://www.example.com/addTwoNumbers(10,20)"
+# returns 30
+```
+
+This allows more powerful chained functions. The following script can now response to "www.example.com/getCustomer(1)" and "www.example.com/getCustomer(1).getTotalPurchases()"
+
+```javascript
+// The app
+const myApp = {
+  getCustomer(id) {
+    return {
+      index() {
+        return id === 1 ? { name: "Jeswin" } : { name: "Thomas" }
+      },
+      getTotalPurchases() {
+        return id === 1 ? 100 : 200;
+      }
+    }
+  },
+}
+```
+
+
 # HTTP Headers and Cookies
 
 By default, key-value pairs defined via headers and cookies are treated as variables. However, applications are allowed to turn off this behavior.
@@ -138,7 +221,7 @@ curl --header "x:20" "http://www.example.com/math.square(x)"
 
 Cookies are disabled by default in NSOAP routers. They must be explicitly enabled in methods which require them. See Router Documentation (Express, Koa) on how to enable cookies.
 
-# Order of searching parameters in the request
+# Order of searching parameters in a Request
 
 NSOAP routers will attempt to find parameter values in the following Order
 
