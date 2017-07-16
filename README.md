@@ -128,7 +128,7 @@ curl "http://www.example.com/default"
 curl http://www.example.com/default()
 ```
 
-# Default function
+# Default Functions
 
 Routers will provide Applications an option to specify the default function to be called when the url omits the function name. Routers should use "index" if no default function is specified.
 
@@ -167,7 +167,7 @@ NSOAP is case-sensitive. So the following will not assign 100 to the parameter '
 curl "http://www.example.com/squareRoot(x)?X=100"
 ```
 
-# Advanced Default functions
+# Advanced Default Functions
 
 If the return value is an object, and it contains a property with the same name as the default function name, and if the value of the property is a function, it is invoked.
 
@@ -209,6 +209,13 @@ const myApp = {
 }
 ```
 
+```bash
+# will return { name: "Jeswin" }
+curl "http://www.example.com/getcustomer(1)"
+
+# will return 100
+curl "http://www.example.com/getcustomer(1).getTotalPurchases()"
+```
 
 # HTTP Headers and Cookies
 
