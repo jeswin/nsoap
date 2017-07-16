@@ -201,7 +201,7 @@ const myApp = {
       index() {
         return id === 1 ? { name: "Jeswin" } : { name: "Thomas" }
       },
-      getTotalPurchases() {
+      totals() {
         return id === 1 ? 100 : 200;
       }
     }
@@ -214,7 +214,7 @@ const myApp = {
 curl "http://www.example.com/getcustomer(1)"
 
 # will return 100
-curl "http://www.example.com/getcustomer(1).getTotalPurchases()"
+curl "http://www.example.com/getcustomer(1).totals"
 ```
 
 # HTTP Headers and Cookies
