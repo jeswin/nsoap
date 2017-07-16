@@ -101,7 +101,7 @@ export default async function route(
     typeof result === "object" &&
     result.hasOwnProperty(options.index) &&
     typeof result[options.index] === "function"
-      ? await Promise.resolve(result[options.index]())
+      ? await Promise.resolve(result[options.index].call(result))
       : result;
 
   return await Promise.resolve(

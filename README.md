@@ -169,9 +169,9 @@ curl "http://www.example.com/squareRoot(x)?X=100"
 
 # Advanced Default functions
 
-If the return value is an object and the name of one of its properties is the same as the default function name, it is invoked.
+If the return value is an object, and it contains a property with the same name as the default function name, and if the value of the property is a function, it is invoked.
 
-That may be confusing, see the example below. addTwoNumbers() returns an object with a property named "index" which contains a function. Assuming "index" is configured to be the default function name, that function will be automatically invoked.
+That may sound confusing, let's look at an example. Assume that the default function name is unchanged, or "index". The addTwoNumbers() function returns an object with a property named "index" which is a function. Since it matches the default function name, it is invoked.
 
 ```javascript
 // The app
@@ -191,7 +191,7 @@ curl "http://www.example.com/addTwoNumbers(10,20)"
 # returns 30
 ```
 
-This allows more powerful chained functions. The following script can now response to "www.example.com/getCustomer(1)" and "www.example.com/getCustomer(1).getTotalPurchases()"
+This allows for more powerful chained functions. The following script can now respond to "www.example.com/getCustomer(1)" and "www.example.com/getCustomer(1).getTotalPurchases()"
 
 ```javascript
 // The app
