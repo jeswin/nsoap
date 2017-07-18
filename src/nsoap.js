@@ -54,13 +54,11 @@ function analyzePath(encodedPath, dicts) {
 
 export default async function route(
   app,
-  rawPath,
+  expression,
   dicts = [],
   options = {},
   then
 ) {
-  const expression = rawPath.startsWith("/") ? rawPath.substring(1) : rawPath;
-
   const parts = expression ? analyzePath(expression, dicts) : [];
 
   let obj,
@@ -84,7 +82,7 @@ export default async function route(
         } else {
           const ref = result[part.identifier];
           result = await Promise.resolve(
-            typeof ref === "function" ? ref.call(result) : ref
+            typeof ref === "function" ? ref.apply(result, []) : ref
           );
         }
       }
@@ -97,7 +95,7 @@ export default async function route(
     typeof result === "object" &&
     result.hasOwnProperty(options.index) &&
     typeof result[options.index] === "function"
-      ? await Promise.resolve(result[options.index].call(result))
+      ? await Promise.resolve(result[options.index].apply(result, []))
       : result;
 
   return await Promise.resolve(

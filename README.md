@@ -1,8 +1,13 @@
 # NSOAP: Native Syntax Object Access Protocol
 
-NSOAP is a Remote Procedure Call (RPC) and URL convention that uses familiar JavaScript syntax for method invocation and parameter passing. In addition to web services, NSOAP conventions can also be used for client-side routing in React, Angular etc. The NSOAP project provides routers for Express, Koa and React. Contributions invited for other platforms.  
+NSOAP is a Remote Procedure Call (RPC) and URL convention that uses familiar JavaScript syntax for method invocation and parameter passing. In addition to web services, NSOAP conventions can also be used for client-side routing in React, Angular etc. The NSOAP project provides routers for Express, Koa and React. Contributions invited for other frameworks and languages.  
 
-Attempting to explain it without code is futile. Let's go straight to the examples. Examples are available for server-side routing with NSOAP-Express, NSOAP-Koa and client-side routing with NSOAP-React.
+NSOAP Routers and documentation are available for:
+- NSOAP Express
+- NSOAP Koa
+- NSOAP React
+
+Attempting to explain it without code is futile. Let's go straight to the examples.
 
 # Initializing your App: The App Object
 
@@ -217,6 +222,20 @@ curl "http://www.example.com/getcustomer(1)"
 curl "http://www.example.com/getcustomer(1).totals"
 ```
 
+# Raw Request and Response Handling
+
+Sometimes, you might want to access the request and response objects directly. You could do that by returning a function as the result. In the following example, the handler for the url /getCustomer(100) has full access to the request and response objects.  
+
+```javascript
+const myApp = {
+  getCustomer(id) {
+    return (req, res) => {
+      res.send("Hello")
+    }
+  },
+}
+```
+
 # HTTP Headers and Cookies
 
 By default, key-value pairs defined via headers and cookies are treated as variables. However, applications are allowed to turn off this behavior.
@@ -230,7 +249,7 @@ Cookies are disabled by default in NSOAP routers. They must be explicitly enable
 
 # Order of searching parameters in a Request
 
-NSOAP routers will attempt to find parameter values in the following Order
+NSOAP server-side routers must attempt to find parameter values in the following Order
 
 - Headers
 - Querystring
@@ -238,6 +257,21 @@ NSOAP routers will attempt to find parameter values in the following Order
 - Cookies (later)
 
 This means that if a parameter say "x" is defined in the Headers and in the Body, the value found in Headers will take precedence.
+
+# Status Codes
+
+--PLACEHOLDER--
+
+Routers may set the status code to 200 when the function executes without errors and 500 if an exception was thrown.
+If special status codes are needed (say HTTP 301 Permanent Redirect), applications are expected to directly use the response object provided by the router.
+
+# Reading Streams
+
+--PLACEHOLDER-- Some data is best accessed as streams on the server-side for performance reasons.
+
+# Writing streams
+
+--PLACEHOLDER--
 
 # Security implications of ignoring HTTP methods
 
