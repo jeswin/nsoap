@@ -6,7 +6,7 @@ const identifierRegex = /^[a-zA-Z_$][a-zA-Z_$0-9]*$/;
     a) Assigned a value in one of the dicts
     b) OR should be treated as a string literal "x" or "y"
 */
-function getArgumentValue(dicts, options) {
+function getArgumentValue(dicts) {
   return a =>
     a === "true" || a === "false"
       ? { value: a === "true" }
@@ -15,8 +15,6 @@ function getArgumentValue(dicts, options) {
           ? (() => {
               for (const i = 0; i < dicts.length; i++) {
                 const dict = dicts[i];
-                const keys = Object.keys(dict).map();
-
                 if (dict.hasOwnProperty(a)) {
                   return { value: dict[a] };
                 }
@@ -36,26 +34,22 @@ function analyzePath(encodedPath, dicts) {
   //The path would be url encoded
   const path = decodeURI(encodedPath);
   const parts = path.indexOf(".") ? path.split(".") : [path];
-  const openingBracket = path.indexOf("(");
-  const isFunction = openingBracket > -1;
-  return parts.map(
-    part =>
-      isFunction
-        ? (() => {
-            const closingBracket = part.indexOf(")");
-            const identifier = part.substring(0, openingBracket);
-            const argsString = part.substring(
-              openingBracket,
-              closingBracket - openingBracket
-            );
-            const args = argsString
-              .split(",")
-              .map(a => a.trim())
-              .map(getArgumentValue);
-            return { type: "function", identifier, args };
-          })()
-        : { type: "object", identifier: part }
-  );
+  return parts.map(part => {
+    const openingBracket = part.indexOf("(");
+    const isFunction = openingBracket > -1;
+    return isFunction
+      ? (() => {
+          const closingBracket = part.indexOf(")");
+          const identifier = part.substring(0, openingBracket);
+          const argsString = part.substring(openingBracket + 1, closingBracket);
+          const args = argsString
+            .split(",")
+            .map(a => a.trim())
+            .map(getArgumentValue(dicts));
+          return { type: "function", identifier, args };
+        })()
+      : { type: "object", identifier: part };
+  });
 }
 
 export default async function route(
@@ -67,7 +61,7 @@ export default async function route(
 ) {
   const expression = rawPath.startsWith("/") ? rawPath.substring(1) : rawPath;
 
-  const parts = analyzePath(expression, dicts);
+  const parts = expression ? analyzePath(expression, dicts) : [];
 
   let obj,
     error,
@@ -81,7 +75,9 @@ export default async function route(
         if (part.type === "function") {
           const fn = result[part.identifier];
           if (typeof fn === "function") {
-            result = await Promise.resolve(fn.apply(result, args));
+            result = await Promise.resolve(
+              fn.apply(result, part.args.map(a => a.value))
+            );
           } else {
             error = `${obj}.${part.identifier} is not a function. Was ${typeof fn}.`;
           }
