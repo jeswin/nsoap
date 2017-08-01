@@ -59,6 +59,7 @@ export default async function route(
   options = {},
   then
 ) {
+  const additionalArgs = options.args || [];
   const parts = expression ? analyzePath(expression, dicts) : [];
 
   let obj,
@@ -74,7 +75,10 @@ export default async function route(
           const fn = result[part.identifier];
           if (typeof fn === "function") {
             result = await Promise.resolve(
-              fn.apply(result, part.args.map(a => a.value))
+              fn.apply(
+                result,
+                part.args.map(a => a.value).concat(additionalArgs)
+              )
             );
           } else {
             error = `${obj}.${part.identifier} is not a function. Was ${typeof fn}.`;
@@ -82,7 +86,7 @@ export default async function route(
         } else {
           const ref = result[part.identifier];
           result = await Promise.resolve(
-            typeof ref === "function" ? ref.apply(result, []) : ref
+            typeof ref === "function" ? ref.apply(result, additionalArgs) : ref
           );
         }
       }
@@ -95,7 +99,9 @@ export default async function route(
     typeof result === "object" &&
     result.hasOwnProperty(options.index) &&
     typeof result[options.index] === "function"
-      ? await Promise.resolve(result[options.index].apply(result, []))
+      ? await Promise.resolve(
+          result[options.index].apply(result, additionalArgs)
+        )
       : result;
 
   return await Promise.resolve(

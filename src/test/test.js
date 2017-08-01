@@ -60,9 +60,9 @@ const app = {
   defaultFunction(x, y) {
     return {
       index() {
-        return x + y
+        return x + y;
       }
-    }
+    };
   }
 };
 
@@ -186,13 +186,7 @@ describe("NSOAP", () => {
 
   it("Resolves a Promise", async () => {
     const handler = getMockHandler();
-    await nsoap(
-      app,
-      "promiseToAdd(x,y)",
-      [{ x: 10, y: 20 }],
-      {},
-      handler.then
-    );
+    await nsoap(app, "promiseToAdd(x,y)", [{ x: 10, y: 20 }], {}, handler.then);
     handler.getResult().should.equal(30);
   });
 
@@ -210,7 +204,25 @@ describe("NSOAP", () => {
 
   it("Calls default function on object", async () => {
     const handler = getMockHandler();
-    await nsoap(app, "defaultFunction(10,20)", [], { index: "index" }, handler.then);
+    await nsoap(
+      app,
+      "defaultFunction(10,20)",
+      [],
+      { index: "index" },
+      handler.then
+    );
+    handler.getResult().should.equal(30);
+  });
+
+  it("Passes additional args to handler", async () => {
+    const handler = getMockHandler();
+    await nsoap(
+      app,
+      "defaultFunction(10)",
+      [],
+      { index: "index", args: [20] },
+      handler.then
+    );
     handler.getResult().should.equal(30);
   });
 });
