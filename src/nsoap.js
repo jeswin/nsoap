@@ -77,7 +77,9 @@ export default async function route(
             result = await Promise.resolve(
               fn.apply(
                 result,
-                part.args.map(a => a.value).concat(additionalArgs)
+                options.prependArgs
+                  ? additionalArgs.concat(part.args.map(a => a.value))
+                  : part.args.map(a => a.value).concat(additionalArgs)
               )
             );
           } else {

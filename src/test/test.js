@@ -15,6 +15,9 @@ const app = {
   binary(x, y) {
     return x + y;
   },
+  divide(x, y) {
+    return x / y;
+  },
   namespace: {
     binary(x, y) {
       return x + y;
@@ -224,5 +227,17 @@ describe("NSOAP", () => {
       handler.then
     );
     handler.getResult().should.equal(30);
+  });
+
+  it("Prepends additional args", async () => {
+    const handler = getMockHandler();
+    await nsoap(
+      app,
+      "divide(10)",
+      [],
+      { index: "index", prependArgs: true, args: [20] },
+      handler.then
+    );
+    handler.getResult().should.equal(2);
   });
 });
