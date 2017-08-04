@@ -2,12 +2,15 @@
 
 NSOAP is a Remote Procedure Call (RPC) and URL convention that uses familiar JavaScript syntax for method invocation and parameter passing. In addition to web services, NSOAP conventions can also be used for client-side routing in React, Angular etc. The NSOAP project provides routers for Express, Koa and React. Contributions invited for other frameworks and languages.  
 
-NSOAP Routers and documentation are available for:
-- NSOAP Express
-- NSOAP Koa
-- NSOAP React
-
 Attempting to explain it without code is futile. Let's go straight to the examples.
+
+Choose your framework
+
+<ul class="selector">
+  <li><a href="/">Express JS</a></li>
+  <li><a href="/koa.html">Koa JS</a></li>
+  <li><a href="/react.html">React JS</a></li>
+</ul>
 
 # Initializing your App: The App Object
 
