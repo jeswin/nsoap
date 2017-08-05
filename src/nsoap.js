@@ -53,12 +53,13 @@ function analyzePath(encodedPath, dicts) {
 }
 
 export default async function route(
-  app,
+  _app,
   expression,
   dicts = [],
   options = {},
   then
 ) {
+  const app = typeof _app === "function" ? _app() : app;
   const additionalArgs = options.args || [];
   const parts = expression ? analyzePath(expression, dicts) : [];
 
