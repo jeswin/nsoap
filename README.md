@@ -306,16 +306,123 @@ const myApp = {
 }
 ```
 
-## Advanced Request Handling
+## Reading and Writing Streams
 
+To read or write streams, you may use Raw Request and Response Handling.
 
+```javascript
+const myApp = {
+  streamData() {
+    return (req, res) => {
+      const interval = setInterval(() => {
+        res.write(JSON.stringify({ foo: Math.random() * 100, count: ++c }) + '\n');
+        if (c === 10) {
+          clearInterval(interval);
+          res.end();
+        }
+      }, 1000);
+    }
+  },
+}
+```
 
+## Advanced Options
 
-## Reading Streams
+Additional options may be pass in via the options object while initializing NSOAP-Express.
+You would probably not need any of these.
 
---PLACEHOLDER-- Some data is best accessed as streams on the server-side for performance reasons.
+### urlPrefix
 
-## Writing streams
+Makes the router handle only urls prefixed with the specified path.
 
---PLACEHOLDER--
+```javascript
+//...
+const options = { urlPrefix = "/home" };
+app.use(nsoap(myApp, options));
+```
+
+### getBody(req: Request) : Object
+
+Allows an app to alter the body parameter dictionary passed into NSOAP-Express.
+If getBody is not defined, the body is assumed to be req.body; which is what middleware like "bodyparser" do.
+
+The following example adds additional parameters to the body dictionary which was already created by bodyparser.
+
+```javascript
+function getBody(req) {
+  return { ...req.body, newParam: 1, anotherParam: "TWO" }
+}
+
+const options = { getBody };
+app.use(nsoap(myApp, options));
+```
+
+### getCookies(req: Request) : Object
+
+Allows an app to alter the Cookies parameter dictionary passed into NSOAP-Express.
+If getCookies is not defined, the body is assumed to be req.cookies; which is what middleware like "cookie-parser" do.
+
+The following example adds additional parameters to the cookies dictionary which was already created by cookie-parser.
+
+```javascript
+function getCookies(req) {
+  return { ...req.cookies, newParam: 1, anotherParam: "TWO" }
+}
+
+const options = { getCookies };
+app.use(nsoap(myApp, options));
+```
+
+### parseQuery(query: Object) : Object
+
+Allows an app to alter the querystring dictionary passed into NSOAP.
+
+```javascript
+function parseQuery(query) {
+  return { ...query, id: 100 }
+}
+
+const options = { parseQuery };
+app.use(nsoap(myApp, options));
+```
+
+### parseBody(body: Object) : Object
+
+Allows an app to alter the body dictionary passed into NSOAP.
+This is the same dictionary that was previously constructed via getBody() or in its absense req.body.
+
+```javascript
+function parseBody(body) {
+  return { ...body, id: 100 }
+}
+
+const options = { parseBody };
+app.use(nsoap(myApp, options));
+```
+
+### parseHeaders(headers: Object) : Object
+
+Allows an app to alter the headers dictionary passed into NSOAP.
+
+```javascript
+function parseHeaders(headers) {
+  return { ...headers, id: 100 }
+}
+
+const options = { parseHeaders };
+app.use(nsoap(myApp, options));
+```
+
+### parseCookies(cookies: Object) : Object
+
+Allows an app to alter the headers dictionary passed into NSOAP.
+
+```javascript
+function parseCookies(cookies) {
+  return { ...cookies, id: 100 }
+}
+
+const options = { parseCookies };
+app.use(nsoap(myApp, options));
+```
 
