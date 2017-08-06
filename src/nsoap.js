@@ -13,14 +13,21 @@ function getArgumentValue(dicts) {
       : isNaN(a)
         ? identifierRegex.test(a)
           ? (() => {
-            for (const i = 0; i < dicts.length; i++) {
-              const dict = dicts[i];
-              if (dict.hasOwnProperty(a)) {
-                return { value: dict[a] };
+              for (const i = 0; i < dicts.length; i++) {
+                const dict = dicts[i];
+                if (typeof dict === "function") {
+                  const val = dict(a);
+                  if (val) {
+                    return val;
+                  }
+                } else {
+                  if (dict.hasOwnProperty(a)) {
+                    return { value: dict[a] };
+                  }
+                }
               }
-            }
-            return { value: a };
-          })()
+              return { value: a };
+            })()
           : { error: `${a} is not a valid identifier.` }
         : { value: +a };
 }
@@ -39,15 +46,15 @@ function analyzePath(encodedPath, dicts) {
     const isFunction = openingBracket > -1;
     return isFunction
       ? (() => {
-        const closingBracket = part.indexOf(")");
-        const identifier = part.substring(0, openingBracket);
-        const argsString = part.substring(openingBracket + 1, closingBracket);
-        const args = argsString
-          .split(",")
-          .map(a => a.trim())
-          .map(getArgumentValue(dicts));
-        return { type: "function", identifier, args };
-      })()
+          const closingBracket = part.indexOf(")");
+          const identifier = part.substring(0, openingBracket);
+          const argsString = part.substring(openingBracket + 1, closingBracket);
+          const args = argsString
+            .split(",")
+            .map(a => a.trim())
+            .map(getArgumentValue(dicts));
+          return { type: "function", identifier, args };
+        })()
       : { type: "object", identifier: part };
   });
 }
