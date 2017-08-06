@@ -237,7 +237,7 @@ Sometimes, you might want to access the request and response objects directly. Y
 const myApp = {
   getCustomerName(id) {
     return (req, res) => {
-      res.send(id === 1 ? "Jeswin" : "Thomas)
+      res.send(id === 1 ? "Jeswin" : "Thomas")
     }
   },
 }
