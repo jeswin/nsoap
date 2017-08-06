@@ -21,7 +21,7 @@ function getArgumentValue(dicts) {
                     return val;
                   }
                 } else {
-                  if (dict.hasOwnProperty(a)) {
+                  if (Object.prototype.hasOwnProperty.call(dict, a)) {
                     return { value: dict[a] };
                   }
                 }
