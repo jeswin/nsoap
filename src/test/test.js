@@ -18,6 +18,9 @@ const app = {
   divide(x, y) {
     return x / y;
   },
+  tripletAdder(x,y,z) {
+    return x + y + z;
+  },
   namespace: {
     binary(x, y) {
       return x + y;
@@ -66,7 +69,7 @@ const app = {
         return x + y;
       }
     };
-  }
+  },
 };
 
 describe("NSOAP", () => {
