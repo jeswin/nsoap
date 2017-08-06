@@ -52,14 +52,20 @@ function analyzePath(encodedPath, dicts) {
   });
 }
 
+export class RoutingError {
+  constructor(message, type) {
+    this.message = message;
+    this.type = type;
+  }
+}
+
 export default async function route(
   _app,
   expression,
   dicts = [],
-  options = {},
-  then
+  options = {}
 ) {
-  const app = typeof _app === "function" ? _app() : app;
+  const app = typeof _app === "function" ? _app() : _app;
   const additionalArgs = options.args || [];
   const parts = expression ? analyzePath(expression, dicts) : [];
 
@@ -71,43 +77,48 @@ export default async function route(
     const part = parts[i];
     obj = obj ? `${obj}.${part.identifier}` : `${part.identifier}`;
     if (typeof result !== "undefined") {
-      if (!error) {
-        if (part.type === "function") {
-          const fn = result[part.identifier];
-          if (typeof fn === "function") {
-            result = await Promise.resolve(
-              fn.apply(
-                result,
-                options.prependArgs
-                  ? additionalArgs.concat(part.args.map(a => a.value))
-                  : part.args.map(a => a.value).concat(additionalArgs)
-              )
-            );
-          } else {
-            error = `${obj}.${part.identifier} is not a function. Was ${typeof fn}.`;
-          }
-        } else {
-          const ref = result[part.identifier];
+      if (part.type === "function") {
+        const fn = result[part.identifier];
+        if (typeof fn === "function") {
           result = await Promise.resolve(
-            typeof ref === "function" ? ref.apply(result, additionalArgs) : ref
+            fn.apply(
+              result,
+              options.prependArgs
+                ? additionalArgs.concat(part.args.map(a => a.value))
+                : part.args.map(a => a.value).concat(additionalArgs)
+            )
           );
+        } else if (typeof fn === "undefined") {
+          error = new RoutingError(
+            "The requested path was not found.",
+            "NOT_FOUND"
+          );
+          break;
+        } else {
+          error = new RoutingError(
+            `${obj}.${part.identifier} is not a function. Was ${typeof fn}.`,
+            "NOT_A_FUNCTION"
+          );
+          break;
         }
+      } else {
+        const ref = result[part.identifier];
+        result = await Promise.resolve(
+          typeof ref === "function" ? ref.apply(result, additionalArgs) : ref
+        );
       }
     } else {
-      error = `${obj} is undefined.`;
+      break;
     }
   }
 
-  const finalResult =
-    typeof result === "object" &&
-    result.hasOwnProperty(options.index) &&
-    typeof result[options.index] === "function"
-      ? await Promise.resolve(
-          result[options.index].apply(result, additionalArgs)
-        )
+  const finalResult = error
+    ? error
+    : typeof result === "object" &&
+      result.hasOwnProperty(options.index) &&
+      typeof result[options.index] === "function"
+      ? result[options.index].apply(result, additionalArgs)
       : result;
 
-  return await Promise.resolve(
-    then ? (error ? then(undefined, error) : then(finalResult)) : finalResult
-  );
+  return await Promise.resolve(finalResult);
 }
