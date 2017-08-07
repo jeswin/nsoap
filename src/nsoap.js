@@ -90,13 +90,11 @@ export default async function route(
       if (part.type === "function") {
         const fn = result[part.identifier];
         if (typeof fn === "function") {
-          result = await Promise.resolve(
-            fn.apply(
-              result,
-              options.prependArgs
-                ? additionalArgs.concat(part.args.map(a => a.value))
-                : part.args.map(a => a.value).concat(additionalArgs)
-            )
+          result = await fn.apply(
+            result,
+            options.prependArgs
+              ? additionalArgs.concat(part.args.map(a => a.value))
+              : part.args.map(a => a.value).concat(additionalArgs)
           );
         } else if (typeof fn === "undefined") {
           error = new RoutingError(
@@ -113,9 +111,9 @@ export default async function route(
         }
       } else {
         const ref = result[part.identifier];
-        result = await Promise.resolve(
-          typeof ref === "function" ? ref.apply(result, additionalArgs) : ref
-        );
+        result = await (typeof ref === "function"
+          ? ref.apply(result, additionalArgs)
+          : ref);
       }
     } else {
       break;
@@ -135,5 +133,5 @@ export default async function route(
         })()
       : result;
 
-  return await Promise.resolve(finalResult);
+  return await finalResult;
 }
