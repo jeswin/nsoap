@@ -85,7 +85,9 @@ export default async function route(
     obj = obj ? `${obj}.${part.identifier}` : `${part.identifier}`;
     if (typeof result !== "undefined") {
       if (part.type === "function") {
-        const fn = result[part.identifier];
+        const fn = options.onFunctionCallFragment
+          ? options.onFunctionCallFragment(result[part.identifier])
+          : result[part.identifier];
         if (typeof fn === "function") {
           result = await Promise.resolve(
             fn.apply(
@@ -95,6 +97,9 @@ export default async function route(
                 : part.args.map(a => a.value).concat(additionalArgs)
             )
           );
+          if (options.transformFunctionCallFragment) {
+            result = options.transformFunctionCallFragment(result);
+          }
         } else if (typeof fn === "undefined") {
           error = new RoutingError(
             "The requested path was not found.",
@@ -109,10 +114,15 @@ export default async function route(
           break;
         }
       } else {
-        const ref = result[part.identifier];
+        const ref = options.onPropertyAccessFragment
+          ? options.onPropertyAccessFragment(result[part.identifier])
+          : result[part.identifier];
         result = await Promise.resolve(
           typeof ref === "function" ? ref.apply(result, additionalArgs) : ref
         );
+        if (options.transformPropertyFragment) {
+          result = options.transformPropertyFragment(result);
+        }
       }
     } else {
       break;
