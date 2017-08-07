@@ -84,10 +84,11 @@ export default async function route(
     const part = parts[i];
     obj = obj ? `${obj}.${part.identifier}` : `${part.identifier}`;
     if (typeof result !== "undefined") {
+      result = options.beforeAccess
+        ? options.beforeAccess(result, part.identifier)
+        : result;
       if (part.type === "function") {
-        const fn = options.onFunctionCallFragment
-          ? options.onFunctionCallFragment(result[part.identifier])
-          : result[part.identifier];
+        const fn = result[part.identifier];
         if (typeof fn === "function") {
           result = await Promise.resolve(
             fn.apply(
@@ -97,9 +98,6 @@ export default async function route(
                 : part.args.map(a => a.value).concat(additionalArgs)
             )
           );
-          if (options.transformFunctionCallFragment) {
-            result = options.transformFunctionCallFragment(result);
-          }
         } else if (typeof fn === "undefined") {
           error = new RoutingError(
             "The requested path was not found.",
@@ -108,21 +106,16 @@ export default async function route(
           break;
         } else {
           error = new RoutingError(
-            `${obj}.${part.identifier} is not a function. Was ${typeof fn}.`,
+            `${obj} is not a function. Was ${typeof fn}.`,
             "NOT_A_FUNCTION"
           );
           break;
         }
       } else {
-        const ref = options.onPropertyAccessFragment
-          ? options.onPropertyAccessFragment(result[part.identifier])
-          : result[part.identifier];
+        const ref = result[part.identifier];
         result = await Promise.resolve(
           typeof ref === "function" ? ref.apply(result, additionalArgs) : ref
         );
-        if (options.transformPropertyFragment) {
-          result = options.transformPropertyFragment(result);
-        }
       }
     } else {
       break;
@@ -131,10 +124,15 @@ export default async function route(
 
   const finalResult = error
     ? error
-    : typeof result === "object" &&
-      result.hasOwnProperty(options.index) &&
-      typeof result[options.index] === "function"
-      ? result[options.index].apply(result, additionalArgs)
+    : typeof result === "object" && result.hasOwnProperty(options.index)
+      ? (() => {
+          result = options.beforeAccess
+            ? options.beforeAccess(result, options.index)
+            : result;
+          return typeof result[options.index] === "function"
+            ? result[options.index].apply(result, additionalArgs)
+            : result[options.index];
+        })()
       : result;
 
   return await Promise.resolve(finalResult);
