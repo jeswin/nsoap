@@ -1,3 +1,4 @@
+import "babel-polyfill";
 import nsoap, { RoutingError } from "../nsoap";
 import should from "should";
 
@@ -18,7 +19,7 @@ const app = {
   divide(x, y) {
     return x / y;
   },
-  tripletAdder(x,y,z) {
+  tripletAdder(x, y, z) {
     return x + y + z;
   },
   namespace: {
@@ -53,15 +54,15 @@ const app = {
       _str
     };
   },
-  promiseToAdd(x, y) {
-    return Promise.resolve(x + y);
+  async promiseToAdd(x, y) {
+    return x + y;
   },
-  functionOnPromise(x, y) {
-    return Promise.resolve({
+  async functionOnPromise(x, y) {
+    return {
       adder(z) {
         return x + y + z;
       }
-    });
+    };
   },
   defaultFunction(x, y) {
     return {
@@ -70,6 +71,20 @@ const app = {
       }
     };
   },
+  *generatorFunction(x, y) {
+    yield 1;
+    yield 2;
+    yield 3;
+    yield x;
+    return y * 2;
+  },
+  async *asyncGeneratorFunction(x, y) {
+    yield 1;
+    yield 2;
+    yield 3;
+    yield x;
+    return y * 2;
+  }
 };
 
 describe("NSOAP", () => {
@@ -208,5 +223,49 @@ describe("NSOAP", () => {
     const result = await nsoap(app, "nonExistantFunction(10)");
     result.should.be.instanceof(RoutingError);
     result.type.should.equal("NOT_FOUND");
+  });
+
+  it("Invokes a generator function", async () => {
+    const result = await nsoap(app, "generatorFunction(10,20)");
+    result.should.equal(40);
+  });
+
+  it("Invokes an async generator function", async () => {
+    const result = await nsoap(app, "asyncGeneratorFunction(10,20)");
+    result.should.equal(40);
+  });
+
+  it("Calls beforeAccess() before all member access", async () => {
+    let counter = 0;
+    const result = await nsoap(app, "chainAdder1(10).chainAdder2(20)", [], {
+      beforeAccess(i) {
+        counter++;
+        return i;
+      }
+    });
+    result.should.equal(30);
+    counter.should.equal(2);
+  });
+
+  it("Calls onNextValue() every time a generator yields", async () => {
+    let sum = 0;
+    const result = await nsoap(app, "generatorFunction(10,20)", [], {
+      onNextValue(i) {
+        sum += i;
+      }
+    });
+    result.should.equal(40);
+    sum.should.equal(16);
+  });
+
+  it("Calls onNextValue() every time an async generator yields", async () => {
+    let sum = 0;
+    const result = await nsoap(app, "asyncGeneratorFunction(10,20)", [], {
+      onNextValue(i) {
+        sum += i;
+      }
+    });
+    result.should.equal(40);
+    sum.should.equal(16);
   });
 });

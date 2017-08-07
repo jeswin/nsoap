@@ -13,8 +13,7 @@ function getArgumentValue(dicts) {
       : isNaN(a)
         ? identifierRegex.test(a)
           ? (() => {
-              for (const i = 0; i < dicts.length; i++) {
-                const dict = dicts[i];
+              for (const dict of dicts) {
                 if (typeof dict === "function") {
                   const val = dict(a);
                   if (val) {
@@ -66,36 +65,67 @@ export class RoutingError {
   }
 }
 
+function isIterable(gen) {
+  return (
+    (gen[Symbol.iterator] && typeof gen[Symbol.iterator] === "function") ||
+    (Symbol.asyncIterator &&
+      gen[Symbol.asyncIterator] &&
+      typeof gen[Symbol.asyncIterator] === "function")
+  );
+}
+
+function __isIterable(gen) {
+  return gen.next && typeof gen.next === "function";
+}
+
 export default async function route(
   _app,
   expression,
   dicts = [],
   options = {}
 ) {
+
+  async function iterateToEnd(resultOrGenerator) {
+    if (__isIterable(resultOrGenerator)) {
+      const gen = resultOrGenerator;
+      while (true) {
+        const nextVal = await gen.next();
+        if (options.onNextValue && !nextVal.done) {
+          options.onNextValue(await nextVal.value);
+        }
+        if (nextVal.done) {
+          return await nextVal.value;
+        }
+      }
+    } else {
+      return resultOrGenerator;
+    }
+  }
+
   const app = typeof _app === "function" ? _app() : _app;
   const additionalArgs = options.args || [];
   const parts = expression ? analyzePath(expression, dicts) : [];
 
   let obj,
     error,
-    result = app;
+    current = app;
 
-  for (const i = 0; i < parts.length; i++) {
-    const part = parts[i];
+  for (const part of parts) {
     obj = obj ? `${obj}.${part.identifier}` : `${part.identifier}`;
-    if (typeof result !== "undefined") {
-      result = options.beforeAccess
-        ? options.beforeAccess(result, part.identifier)
-        : result;
+    if (typeof current !== "undefined") {
+      if (options.beforeAccess) {
+        current = options.beforeAccess(current, part.identifier);
+      }
       if (part.type === "function") {
-        const fn = result[part.identifier];
+        const fn = current[part.identifier];
         if (typeof fn === "function") {
-          result = await fn.apply(
-            result,
+          const resultOrGenerator = await fn.apply(
+            current,
             options.prependArgs
               ? additionalArgs.concat(part.args.map(a => a.value))
               : part.args.map(a => a.value).concat(additionalArgs)
           );
+          current = await iterateToEnd(resultOrGenerator);
         } else if (typeof fn === "undefined") {
           error = new RoutingError(
             "The requested path was not found.",
@@ -110,10 +140,11 @@ export default async function route(
           break;
         }
       } else {
-        const ref = result[part.identifier];
-        result = await (typeof ref === "function"
-          ? ref.apply(result, additionalArgs)
+        const ref = current[part.identifier];
+        const resultOrGenerator = await (typeof ref === "function"
+          ? ref.apply(current, additionalArgs)
           : ref);
+        current = await iterateToEnd(resultOrGenerator);
       }
     } else {
       break;
@@ -122,16 +153,18 @@ export default async function route(
 
   const finalResult = error
     ? error
-    : typeof result === "object" && result.hasOwnProperty(options.index)
-      ? (() => {
-          result = options.beforeAccess
-            ? options.beforeAccess(result, options.index)
-            : result;
-          return typeof result[options.index] === "function"
-            ? result[options.index].apply(result, additionalArgs)
-            : result[options.index];
+    : typeof current === "object" && current.hasOwnProperty(options.index)
+      ? await (async () => {
+          if (options.beforeAccess) {
+            current = options.beforeAccess(current, options.index);
+          }
+          const resultOrGenerator =
+            typeof current[options.index] === "function"
+              ? current[options.index].apply(current, additionalArgs)
+              : current[options.index];
+          return await iterateToEnd(resultOrGenerator);
         })()
-      : result;
+      : current;
 
   return await finalResult;
 }
