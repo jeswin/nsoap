@@ -79,8 +79,8 @@ const app = {
     return y * 2;
   },
   async *asyncGeneratorFunction(x, y) {
-    yield 1;
-    yield 2;
+    yield await 1;
+    yield await 2;
     yield 3;
     yield x;
     return y * 2;
