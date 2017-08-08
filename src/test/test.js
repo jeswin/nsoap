@@ -235,10 +235,10 @@ describe("NSOAP", () => {
     result.should.equal(40);
   });
 
-  it("Calls beforeAccess() before all member access", async () => {
+  it("Calls modifyHandler() before all member access", async () => {
     let counter = 0;
     const result = await nsoap(app, "chainAdder1(10).chainAdder2(20)", [], {
-      beforeAccess(i) {
+      modifyHandler(i) {
         counter++;
         return i;
       }

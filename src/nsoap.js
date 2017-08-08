@@ -113,8 +113,8 @@ export default async function route(
   for (const part of parts) {
     obj = obj ? `${obj}.${part.identifier}` : `${part.identifier}`;
     if (typeof current !== "undefined") {
-      if (options.beforeAccess) {
-        current = options.beforeAccess(current, part.identifier);
+      if (options.modifyHandler) {
+        current = options.modifyHandler(current, part.identifier);
       }
       if (part.type === "function") {
         const fn = current[part.identifier];
@@ -155,8 +155,8 @@ export default async function route(
     ? error
     : typeof current === "object" && current.hasOwnProperty(options.index)
       ? await (async () => {
-          if (options.beforeAccess) {
-            current = options.beforeAccess(current, options.index);
+          if (options.modifyHandler) {
+            current = options.modifyHandler(current, options.index);
           }
           const resultOrGenerator =
             typeof current[options.index] === "function"
