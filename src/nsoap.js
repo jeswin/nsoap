@@ -79,7 +79,9 @@ function __isIterable(gen) {
 }
 
 function hasOwnProperty(obj, prop) {
-  return typeof obj === "object" && Object.prototype.hasOwnProperty.call(obj, prop);
+  return (
+    typeof obj === "object" && Object.prototype.hasOwnProperty.call(obj, prop)
+  );
 }
 
 export default async function route(
@@ -88,13 +90,13 @@ export default async function route(
   dicts = [],
   options = {}
 ) {
-  async function iterateToEnd(resultOrGenerator) {
+  async function iterateToEnd(resultOrGenerator, current) {
     if (__isIterable(resultOrGenerator)) {
       const gen = resultOrGenerator;
       while (true) {
         const nextVal = await gen.next();
         if (options.onNextValue && !nextVal.done) {
-          options.onNextValue(await nextVal.value);
+          options.onNextValue(await nextVal.value, current);
         }
         if (nextVal.done) {
           return await nextVal.value;
@@ -129,7 +131,7 @@ export default async function route(
                 ? additionalArgs.concat(part.args.map(a => a.value))
                 : part.args.map(a => a.value).concat(additionalArgs)
             );
-            current = await iterateToEnd(resultOrGenerator);
+            current = await iterateToEnd(resultOrGenerator, current);
           } else if (typeof fn === "undefined") {
             error = new RoutingError(
               "The requested path was not found.",
@@ -137,18 +139,18 @@ export default async function route(
             );
             break;
           } else {
-            error = new RoutingError(
-              `${obj} is not a function. Was ${typeof fn}.`,
-              "NOT_A_FUNCTION"
-            );
-            break;
+            const ref = current[part.identifier];
+            const resultOrGenerator = await (typeof ref === "function"
+              ? ref.apply(current, additionalArgs)
+              : ref);
+            current = await iterateToEnd(resultOrGenerator);
           }
         } else {
           const ref = current[part.identifier];
           const resultOrGenerator = await (typeof ref === "function"
             ? ref.apply(current, additionalArgs)
             : ref);
-          current = await iterateToEnd(resultOrGenerator);
+          current = await iterateToEnd(resultOrGenerator, current);
         }
       } else {
         error = new RoutingError(
@@ -173,7 +175,7 @@ export default async function route(
             typeof current[options.index] === "function"
               ? current[options.index].apply(current, additionalArgs)
               : current[options.index];
-          return await iterateToEnd(resultOrGenerator);
+          return await iterateToEnd(resultOrGenerator, current);
         })()
       : current;
 
