@@ -20,7 +20,7 @@ function getArgumentValue(dicts) {
                     return val;
                   }
                 } else {
-                  if (Object.prototype.hasOwnProperty.call(dict, a)) {
+                  if (hasOwnProperty(dict, a)) {
                     return { value: dict[a] };
                   }
                 }
@@ -78,13 +78,16 @@ function __isIterable(gen) {
   return gen.next && typeof gen.next === "function";
 }
 
+function hasOwnProperty(obj, prop) {
+  return typeof obj === "object" && Object.prototype.hasOwnProperty.call(obj, prop);
+}
+
 export default async function route(
   _app,
   expression,
   dicts = [],
   options = {}
 ) {
-
   async function iterateToEnd(resultOrGenerator) {
     if (__isIterable(resultOrGenerator)) {
       const gen = resultOrGenerator;
@@ -116,35 +119,43 @@ export default async function route(
       if (options.modifyHandler) {
         current = options.modifyHandler(current, part.identifier);
       }
-      if (part.type === "function") {
-        const fn = current[part.identifier];
-        if (typeof fn === "function") {
-          const resultOrGenerator = await fn.apply(
-            current,
-            options.prependArgs
-              ? additionalArgs.concat(part.args.map(a => a.value))
-              : part.args.map(a => a.value).concat(additionalArgs)
-          );
-          current = await iterateToEnd(resultOrGenerator);
-        } else if (typeof fn === "undefined") {
-          error = new RoutingError(
-            "The requested path was not found.",
-            "NOT_FOUND"
-          );
-          break;
+      if (hasOwnProperty(current, part.identifier)) {
+        if (part.type === "function") {
+          const fn = current[part.identifier];
+          if (typeof fn === "function") {
+            const resultOrGenerator = await fn.apply(
+              current,
+              options.prependArgs
+                ? additionalArgs.concat(part.args.map(a => a.value))
+                : part.args.map(a => a.value).concat(additionalArgs)
+            );
+            current = await iterateToEnd(resultOrGenerator);
+          } else if (typeof fn === "undefined") {
+            error = new RoutingError(
+              "The requested path was not found.",
+              "NOT_FOUND"
+            );
+            break;
+          } else {
+            error = new RoutingError(
+              `${obj} is not a function. Was ${typeof fn}.`,
+              "NOT_A_FUNCTION"
+            );
+            break;
+          }
         } else {
-          error = new RoutingError(
-            `${obj} is not a function. Was ${typeof fn}.`,
-            "NOT_A_FUNCTION"
-          );
-          break;
+          const ref = current[part.identifier];
+          const resultOrGenerator = await (typeof ref === "function"
+            ? ref.apply(current, additionalArgs)
+            : ref);
+          current = await iterateToEnd(resultOrGenerator);
         }
       } else {
-        const ref = current[part.identifier];
-        const resultOrGenerator = await (typeof ref === "function"
-          ? ref.apply(current, additionalArgs)
-          : ref);
-        current = await iterateToEnd(resultOrGenerator);
+        error = new RoutingError(
+          "The requested path was not found.",
+          "NOT_FOUND"
+        );
+        break;
       }
     } else {
       break;
@@ -153,7 +164,7 @@ export default async function route(
 
   const finalResult = error
     ? error
-    : typeof current === "object" && current.hasOwnProperty(options.index)
+    : hasOwnProperty(current, options.index)
       ? await (async () => {
           if (options.modifyHandler) {
             current = options.modifyHandler(current, options.index);
