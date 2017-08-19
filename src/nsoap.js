@@ -119,7 +119,7 @@ export default async function route(
     obj = obj ? `${obj}.${part.identifier}` : `${part.identifier}`;
     if (typeof current !== "undefined") {
       if (options.modifyHandler) {
-        current = options.modifyHandler(current, part.identifier);
+        current = options.modifyHandler(part.identifier, current);
       }
       if (hasOwnProperty(current, part.identifier)) {
         if (part.type === "function") {
@@ -169,7 +169,7 @@ export default async function route(
     : hasOwnProperty(current, options.index)
       ? await (async () => {
           if (options.modifyHandler) {
-            current = options.modifyHandler(current, options.index);
+            current = options.modifyHandler(options.index, current);
           }
           const resultOrGenerator =
             typeof current[options.index] === "function"

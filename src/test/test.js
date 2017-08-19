@@ -238,7 +238,7 @@ describe("NSOAP", () => {
   it("Calls modifyHandler() before all member access", async () => {
     let counter = 0;
     const result = await nsoap(app, "chainAdder1(10).chainAdder2(20)", [], {
-      modifyHandler(i) {
+      modifyHandler(key, i) {
         counter++;
         return i;
       }
