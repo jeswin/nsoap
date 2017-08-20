@@ -143,6 +143,11 @@ describe("NSOAP", () => {
     result.should.equal(30);
   });
 
+  it("Substitutes dots for slashes", async () => {
+    const result = await nsoap(app, "nested/namespace/binary(10,20)", [], { useSlash: true });
+    result.should.equal(30);
+  });
+
   it("Accepts JSON arguments", async () => {
     const result = await nsoap(app, "json(obj)", [{ obj: { x: 10 } }], {});
     result.should.equal(30);

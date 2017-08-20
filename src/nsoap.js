@@ -86,7 +86,7 @@ function hasOwnProperty(obj, prop) {
 
 export default async function route(
   _app,
-  expression,
+  _expression,
   dicts = [],
   options = {}
 ) {
@@ -108,6 +108,9 @@ export default async function route(
   }
 
   const app = typeof _app === "function" ? _app() : _app;
+  const expression = options.useSlash
+    ? _expression.replace(/\//g, ".")
+    : _expression;
   const additionalArgs = options.args || [];
   const parts = expression ? analyzePath(expression, dicts) : [];
 
