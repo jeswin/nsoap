@@ -143,7 +143,7 @@ export default async function route(
             const resultOrGenerator = await (typeof ref === "function"
               ? ref.apply(current, additionalArgs)
               : ref);
-            current = await iterateToEnd(resultOrGenerator);
+            current = await iterateToEnd(resultOrGenerator, current);
           }
         } else {
           const ref = current[part.identifier];
