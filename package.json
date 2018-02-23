@@ -1,26 +1,20 @@
 {
   "name": "nsoap",
-  "version": "0.0.15",
+  "version": "0.0.17",
   "author": "Jeswin Kumar<jeswinpk@agilehead.com>",
-  "main": "dist/nsoap",
+  "main": "./dist",
+  "types": "./dist",
   "scripts": {
-    "test": "./build.sh && mocha --require source-map-support/register dist/test/test.js",
-    "test-debug": "./build.sh && mocha --debug-brk --require source-map-support/register dist/test/test.js"
+    "test": "./build.sh && mocha dist/test/test.js",
+    "test-debug": "./build.sh && mocha --debug-brk dist/test/test.js"
   },
   "license": "MIT",
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
-    "babel-loader": "*",
-    "babel-polyfill": "^6.23.0",
-    "babel-plugin-transform-async-to-generator": "*",
-    "babel-preset-es2015-without-regenerator": "^1.0.1",
-    "babel-preset-es2016": "^6.24.1",
-    "babel-preset-es2017": "^6.24.1",
-    "babel-preset-stage-3": "^6.24.1",
-    "mocha": "*",
-    "should": "*",
-    "source-map-loader": "*",
-    "source-map-support": "*"
+    "@types/mocha": "^2.2.48",
+    "@types/node": "^9.4.6",
+    "@types/should": "^13.0.0",
+    "mocha": "^5.0.1",
+    "should": "^13.2.1"
   }
 }

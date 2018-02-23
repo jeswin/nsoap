@@ -1,6 +1,6 @@
-import "babel-polyfill";
+import "mocha";
+import "should";
 import nsoap, { RoutingError } from "../nsoap";
-import should from "should";
 
 const app = {
   index() {
@@ -10,75 +10,75 @@ const app = {
     return "NSOAP Test Suite";
   },
   static: "NSOAP Static File",
-  unary(arg) {
+  unary(arg: number) {
     return arg + 10;
   },
-  binary(x, y) {
+  binary(x: number, y: number) {
     return x + y;
   },
-  divide(x, y) {
+  divide(x: number, y: number) {
     return x / y;
   },
-  tripletAdder(x, y, z) {
+  tripletAdder(x: number, y: number, z: number) {
     return x + y + z;
   },
   namespace: {
-    binary(x, y) {
+    binary(x: number, y: number) {
       return x + y;
     }
   },
   nested: {
     namespace: {
-      binary(x, y) {
+      binary(x: number, y: number) {
         return x + y;
       }
     }
   },
-  json(input) {
+  json(input: { x: number }) {
     return input.x + 20;
   },
-  throw(a) {
+  throw(a: any) {
     throw new Error("Exception!");
   },
-  chainAdder1(x) {
+  chainAdder1(x: number) {
     return {
-      chainAdder2(y) {
+      chainAdder2(y: number) {
         return x + y;
       }
     };
   },
-  infer(_bool, _num, _str) {
+  infer(_bool: boolean, _num: number, _str: string) {
     return {
       _bool,
       _num,
       _str
     };
   },
-  async promiseToAdd(x, y) {
+  async promiseToAdd(x: number, y: number) {
     return x + y;
   },
-  async functionOnPromise(x, y) {
+  async functionOnPromise(x: number, y: number) {
     return {
-      adder(z) {
+      adder(z: number) {
         return x + y + z;
       }
     };
   },
-  defaultFunction(x, y) {
+  defaultFunction(x: number, y: number) {
     return {
       index() {
         return x + y;
       }
     };
   },
-  *generatorFunction(x, y) {
+  *generatorFunction(x: number, y: number) {
     yield 1;
     yield 2;
     yield 3;
     yield x;
     return y * 2;
   },
-  async *asyncGeneratorFunction(x, y) {
+  async *asyncGeneratorFunction(x: number, y: number) {
     yield await 1;
     yield await 2;
     yield 3;
@@ -243,7 +243,7 @@ describe("NSOAP", () => {
   it("Calls modifyHandler() before all member access", async () => {
     let counter = 0;
     const result = await nsoap(app, "chainAdder1(10).chainAdder2(20)", [], {
-      modifyHandler(key, i) {
+      modifyHandler(key: string, i: number) {
         counter++;
         return i;
       }
@@ -255,7 +255,7 @@ describe("NSOAP", () => {
   it("Calls onNextValue() every time a generator yields", async () => {
     let sum = 0;
     const result = await nsoap(app, "generatorFunction(10,20)", [], {
-      onNextValue(i) {
+      onNextValue(i: number) {
         sum += i;
       }
     });
@@ -266,7 +266,7 @@ describe("NSOAP", () => {
   it("Calls onNextValue() every time an async generator yields", async () => {
     let sum = 0;
     const result = await nsoap(app, "asyncGeneratorFunction(10,20)", [], {
-      onNextValue(i) {
+      onNextValue(i: number) {
         sum += i;
       }
     });

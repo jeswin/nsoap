@@ -1,3 +1,5 @@
+import "./preload";
+
 const identifierRegex = /^[a-zA-Z_$][a-zA-Z_$0-9]*$/;
 
 /*
@@ -6,11 +8,11 @@ const identifierRegex = /^[a-zA-Z_$][a-zA-Z_$0-9]*$/;
     a) Assigned a value in one of the dicts
     b) OR should be treated as a string literal "x" or "y"
 */
-function getArgumentValue(dicts) {
-  return a =>
+function getArgumentValue(dicts: Array<Dict>) {
+  return (a: string) =>
     a === "true" || a === "false"
       ? { value: a === "true" }
-      : isNaN(a)
+      : isNaN(Number(a))
         ? identifierRegex.test(a)
           ? (() => {
               for (const dict of dicts) {
@@ -36,7 +38,10 @@ function getArgumentValue(dicts) {
       a) objects
       b) functions and their parameters
 */
-function analyzePath(encodedPath, dicts) {
+function analyzePath(
+  encodedPath: string,
+  dicts: Array<Dict>
+): Array<FunctionPart | ObjectPart> {
   //The path would be url encoded
   const path = decodeURI(encodedPath);
   const parts = path.indexOf(".") ? path.split(".") : [path];
@@ -52,45 +57,72 @@ function analyzePath(encodedPath, dicts) {
             .split(",")
             .map(a => a.trim())
             .map(getArgumentValue(dicts));
-          return { type: "function", identifier, args };
+          const result: FunctionPart = { type: "function", identifier, args };
+          return result;
         })()
-      : { type: "object", identifier: part };
+      : ({ type: "object", identifier: part } as ObjectPart);
   });
 }
 
+export type FunctionPart = {
+  type: "function";
+  identifier: string;
+  args: Array<any>;
+};
+export type ObjectPart = { type: "object"; identifier: string };
+
 export class RoutingError {
-  constructor(message, type) {
+  message: string;
+  type: string;
+
+  constructor(message: string, type: string) {
     this.message = message;
     this.type = type;
   }
 }
 
-function isIterable(gen) {
+function isIterable(gen: any): gen is Iterable<any> {
   return (
     (gen[Symbol.iterator] && typeof gen[Symbol.iterator] === "function") ||
-    (Symbol.asyncIterator &&
-      gen[Symbol.asyncIterator] &&
-      typeof gen[Symbol.asyncIterator] === "function")
+    ((Symbol as any).asyncIterator &&
+      gen[(Symbol as any).asyncIterator] &&
+      typeof gen[(Symbol as any).asyncIterator] === "function")
   );
 }
 
-function __isIterable(gen) {
+function __isIterable(gen: any): gen is Generator {
   return gen.next && typeof gen.next === "function";
 }
 
-function hasOwnProperty(obj, prop) {
+function hasOwnProperty(obj: Object, prop: string): boolean {
   return (
     typeof obj === "object" && Object.prototype.hasOwnProperty.call(obj, prop)
   );
 }
 
+export type NSoapOptions = {
+  modifyHandler?: Function;
+  useSlash?: boolean;
+  index?: string;
+  onNextValue?: Function;
+  args?: Array<any>;
+  prependArgs?: boolean;
+};
+
+export type Dict =
+  | {
+      [key: string]: any;
+    }
+  | Function;
+
 export default async function route(
-  _app,
-  _expression,
-  dicts = [],
-  options = {}
+  _app: Function | Object,
+  _expression: string,
+  dicts: Array<Dict> = [],
+  _options: NSoapOptions = {}
 ) {
-  async function iterateToEnd(resultOrGenerator, current) {
+  const options = { ..._options, index: _options.index || "index" }
+  async function iterateToEnd(resultOrGenerator: any, current: any) {
     if (__isIterable(resultOrGenerator)) {
       const gen = resultOrGenerator;
       while (true) {
