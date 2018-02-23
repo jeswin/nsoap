@@ -1,6 +1,6 @@
 import "mocha";
 import "should";
-import nsoap, { RoutingError } from "../nsoap";
+import nsoap, { RoutingError } from "../";
 
 const app = {
   index() {
